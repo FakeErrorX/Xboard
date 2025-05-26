@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/FakeErrorX/xboard:new
+    image: ghcr.io/fakeerrorx/xboard:new
     volumes:
       - ./.docker/.data/redis/:/data/
       - ./.env:/www/.env
@@ -18,7 +18,7 @@ services:
     ports:
       - 7001:7001
   horizon:
-    image: ghcr.io/FakeErrorX/xboard:new
+    image: ghcr.io/fakeerrorx/xboard:new
     volumes:
       - ./.docker/.data/redis/:/data/
       - ./.env:/www/.env
