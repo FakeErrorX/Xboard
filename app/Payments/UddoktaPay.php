@@ -34,14 +34,12 @@ class UddoktaPay implements PaymentInterface
 
     public function pay($order): array
     {
+        // Store the order in cache for verification on return
+        // This approach doesn't rely on UddoktaPay's redirect behavior
+        \Cache::put('uddoktapay_order_' . $order['trade_no'], $order, now()->addHours(2));
+        
         // Ensure the base_url doesn't end with a slash
         $baseUrl = rtrim($this->config['base_url'], '/');
-        
-        // Create a custom return URL that will handle UddoktaPay's invoice_id parameter
-        // Format: original_return_url?payment_method=uddoktapay&uddoktapay_return=1
-        $customReturnUrl = $order['return_url'] . 
-            (parse_url($order['return_url'], PHP_URL_QUERY) ? '&' : '?') . 
-            'payment_method=uddoktapay&uddoktapay_return=1';
         
         // Prepare payload according to UddoktaPay API requirements
         $payload = [
@@ -50,9 +48,9 @@ class UddoktaPay implements PaymentInterface
             'amount' => $order['total_amount'] / 100, // Convert from cents to whole currency unit
             'metadata' => [
                 'order_id' => $order['trade_no'],
-                'return_url' => $order['return_url'], // Store original return URL in metadata
             ],
-            'redirect_url' => $customReturnUrl,
+            // Use the return URL directly since we'll handle verification via cache
+            'redirect_url' => $order['return_url'],
             'cancel_url' => $order['return_url'],
             'webhook_url' => $order['notify_url'],
             'return_type' => 'GET' // Explicitly set return type to GET
@@ -62,7 +60,8 @@ class UddoktaPay implements PaymentInterface
             // Log the request for debugging
             Log::info('UddoktaPay payment request', [
                 'url' => "{$baseUrl}/api/checkout-v2",
-                'payload' => $payload
+                'payload' => $payload,
+                'trade_no' => $order['trade_no']
             ]);
             
             $response = Http::withHeaders([
@@ -74,7 +73,8 @@ class UddoktaPay implements PaymentInterface
             // Log the response for debugging
             Log::info('UddoktaPay payment response', [
                 'status' => $response->status(),
-                'body' => $response->json()
+                'body' => $response->json(),
+                'trade_no' => $order['trade_no']
             ]);
             
             $responseData = $response->json();
@@ -82,6 +82,11 @@ class UddoktaPay implements PaymentInterface
             if (!$response->successful() || !isset($responseData['payment_url'])) {
                 $errorMessage = $responseData['message'] ?? 'Payment initialization failed';
                 throw new ApiException($errorMessage);
+            }
+            
+            // Store the invoice_id if available
+            if (isset($responseData['invoice_id'])) {
+                \Cache::put('uddoktapay_invoice_' . $order['trade_no'], $responseData['invoice_id'], now()->addHours(2));
             }
             
             return [
@@ -100,22 +105,26 @@ class UddoktaPay implements PaymentInterface
 
     public function notify($params): array|bool
     {
-        // Log the incoming webhook data
-        Log::info('UddoktaPay webhook received', [
+        // Log all request information in detail
+        $requestInfo = [
+            'method' => request()->method(),
+            'url' => request()->fullUrl(),
             'params' => $params,
-            'request' => request()->all(),
-            'content' => request()->getContent()
-        ]);
+            'query' => request()->query(),
+            'post' => request()->post(),
+            'content' => request()->getContent(),
+            'headers' => request()->header()
+        ];
         
-        // Check if this is a return URL redirect with invoice_id
-        if (request()->query('uddoktapay_return') && request()->query('invoice_id')) {
-            // This is a user returning from payment page
-            $invoiceId = request()->query('invoice_id');
-            
-            // Verify the payment status
+        Log::info('UddoktaPay notification received', $requestInfo);
+        
+        // Check if this is a return from payment page with invoice_id
+        $invoiceId = request()->query('invoice_id');
+        if ($invoiceId) {
             try {
+                // Verify the payment
                 $baseUrl = rtrim($this->config['base_url'], '/');
-                $verifyResponse = Http::withHeaders([
+                $response = Http::withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
                     'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
@@ -123,16 +132,30 @@ class UddoktaPay implements PaymentInterface
                     'invoice_id' => $invoiceId
                 ]);
                 
-                $paymentData = $verifyResponse->json();
+                Log::info('UddoktaPay verification response (redirect)', [
+                    'invoice_id' => $invoiceId,
+                    'response' => $response->json()
+                ]);
                 
-                if ($verifyResponse->successful() && 
+                $paymentData = $response->json();
+                
+                // Check if payment was successful
+                if ($response->successful() && 
                     isset($paymentData['metadata']['order_id']) && 
                     $paymentData['status'] === 'COMPLETED') {
                     
-                    // Payment is verified successfully
+                    $tradeNo = $paymentData['metadata']['order_id'];
+                    $transactionId = $paymentData['transaction_id'] ?? $invoiceId;
+                    
+                    // Log successful verification
+                    Log::info('UddoktaPay payment verified successfully', [
+                        'trade_no' => $tradeNo,
+                        'transaction_id' => $transactionId
+                    ]);
+                    
                     return [
-                        'trade_no' => $paymentData['metadata']['order_id'],
-                        'callback_no' => $paymentData['transaction_id'] ?? $invoiceId,
+                        'trade_no' => $tradeNo,
+                        'callback_no' => $transactionId,
                         'custom_result' => json_encode(['status' => 'success'])
                     ];
                 }
@@ -144,74 +167,86 @@ class UddoktaPay implements PaymentInterface
             }
         }
         
-        // If webhook data is coming directly from the request body
-        if (empty($params) && request()->getContent()) {
-            $params = json_decode(request()->getContent(), true) ?? [];
+        // Try to extract invoice_id from different possible sources
+        $extractedInvoiceId = null;
+        
+        // Try to get from URL parameters
+        if (request()->query('invoice_id')) {
+            $extractedInvoiceId = request()->query('invoice_id');
         }
         
-        // Handle GET request parameters - UddoktaPay might send as query params
-        if (empty($params) && request()->query('invoice_id')) {
-            $params['invoice_id'] = request()->query('invoice_id');
+        // Try to get from POST data 
+        if (!$extractedInvoiceId && request()->post('invoice_id')) {
+            $extractedInvoiceId = request()->post('invoice_id');
         }
-
-        // Validate the webhook by verifying invoice_id
-        if (!isset($params['invoice_id'])) {
-            Log::warning('UddoktaPay webhook missing invoice_id');
-            return false;
+        
+        // Try to get from JSON body
+        if (!$extractedInvoiceId && !empty($params) && isset($params['invoice_id'])) {
+            $extractedInvoiceId = $params['invoice_id'];
+        } 
+        
+        // Try to parse JSON content
+        if (!$extractedInvoiceId && request()->getContent()) {
+            try {
+                $jsonData = json_decode(request()->getContent(), true);
+                if (is_array($jsonData) && isset($jsonData['invoice_id'])) {
+                    $extractedInvoiceId = $jsonData['invoice_id'];
+                }
+            } catch (\Exception $e) {
+                // Ignore JSON parsing errors
+            }
         }
-
-        try {
-            // Verify payment status with UddoktaPay API
-            $baseUrl = rtrim($this->config['base_url'], '/');
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-                'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
-            ])->post("{$baseUrl}/api/verify-payment", [
-                'invoice_id' => $params['invoice_id']
-            ]);
-
-            // Log the verification response
-            Log::info('UddoktaPay payment verification response', [
-                'status' => $response->status(),
-                'body' => $response->json()
-            ]);
-
-            $paymentData = $response->json();
-            
-            // Check if payment was successful
-            if (!$response->successful()) {
-                Log::warning('UddoktaPay API verification failed', [
-                    'status' => $response->status(),
-                    'response' => $paymentData
+        
+        // If we found an invoice_id, verify the payment
+        if ($extractedInvoiceId) {
+            try {
+                // Verify payment status with UddoktaPay API
+                $baseUrl = rtrim($this->config['base_url'], '/');
+                $response = Http::withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                    'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
+                ])->post("{$baseUrl}/api/verify-payment", [
+                    'invoice_id' => $extractedInvoiceId
                 ]);
-                return false;
+                
+                Log::info('UddoktaPay webhook verification response', [
+                    'invoice_id' => $extractedInvoiceId,
+                    'response' => $response->json()
+                ]);
+                
+                $paymentData = $response->json();
+                
+                // Check if payment was successful
+                if ($response->successful() && 
+                    isset($paymentData['metadata']['order_id']) && 
+                    $paymentData['status'] === 'COMPLETED') {
+                    
+                    $tradeNo = $paymentData['metadata']['order_id'];
+                    $transactionId = $paymentData['transaction_id'] ?? $extractedInvoiceId;
+                    
+                    // Log successful verification
+                    Log::info('UddoktaPay webhook payment verified', [
+                        'trade_no' => $tradeNo,
+                        'transaction_id' => $transactionId
+                    ]);
+                    
+                    return [
+                        'trade_no' => $tradeNo,
+                        'callback_no' => $transactionId,
+                        'custom_result' => json_encode(['status' => 'success'])
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::error('UddoktaPay webhook verification error', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
-            
-            // Check if metadata exists
-            if (!isset($paymentData['metadata']) || !isset($paymentData['metadata']['order_id'])) {
-                Log::warning('UddoktaPay missing metadata or order_id');
-                return false;
-            }
-
-            // Check payment status
-            if ($paymentData['status'] !== 'COMPLETED') {
-                Log::warning('UddoktaPay payment not completed', ['status' => $paymentData['status']]);
-                return false;
-            }
-            
-            return [
-                'trade_no' => $paymentData['metadata']['order_id'],
-                'callback_no' => $paymentData['transaction_id'] ?? $params['invoice_id'],
-                'custom_result' => json_encode(['status' => 'success'])
-            ];
-            
-        } catch (\Exception $e) {
-            Log::error('UddoktaPay notification error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return false;
         }
+        
+        // If we couldn't verify the payment, return false
+        Log::warning('UddoktaPay notification could not be verified');
+        return false;
     }
 }
