@@ -116,9 +116,6 @@ window.XBOARD_TRANSLATIONS['zh-CN'] = {
     },
     "languages": {
       "en-US": "English",
-      "ja-JP": "日本語",
-      "ko-KR": "한국어",
-      "vi-VN": "Tiếng Việt",
       "zh-CN": "简体中文",
       "zh-TW": "繁體中文"
     },
