@@ -47,6 +47,10 @@ class UddoktaPay implements PaymentInterface
             $amount = $amount * $this->config['rate'];
         }
 
+        // Ensure URLs are HTTPS and absolute
+        $returnUrl = $this->ensureHttpsUrl($order['return_url']);
+        $notifyUrl = $this->ensureHttpsUrl($order['notify_url']);
+
         // Prepare payment data
         $data = [
             'amount' => $amount,
@@ -55,9 +59,9 @@ class UddoktaPay implements PaymentInterface
             'metadata' => [
                 'order_id' => $order['trade_no']
             ],
-            'redirect_url' => $order['return_url'],
-            'cancel_url' => $order['return_url'],
-            'webhook_url' => $order['notify_url'],
+            'redirect_url' => $returnUrl,
+            'cancel_url' => $returnUrl,
+            'webhook_url' => $notifyUrl,
         ];
 
         // Prepare cURL request
@@ -88,6 +92,8 @@ class UddoktaPay implements PaymentInterface
             // Store the invoice_id in session for verification
             if (isset($result['invoice_id'])) {
                 session(['uddoktapay_invoice_id' => $result['invoice_id']]);
+                // Also store in cache for webhook verification
+                \Cache::put('uddoktapay_invoice_' . $result['invoice_id'], $order['trade_no'], now()->addHours(24));
             }
             
             return [
@@ -103,16 +109,19 @@ class UddoktaPay implements PaymentInterface
 
     public function notify($params): array|bool
     {
-        \Log::info('UddoktaPay callback received: ' . json_encode($params));
+        \Log::info('UddoktaPay webhook received: ' . json_encode($params));
         
         // Get invoice_id from multiple sources
         $invoice_id = $_GET['invoice_id'] ?? $params['invoice_id'] ?? session('uddoktapay_invoice_id') ?? null;
         
         if (!$invoice_id) {
-            \Log::error('UddoktaPay callback: Missing invoice_id');
+            \Log::error('UddoktaPay webhook: Missing invoice_id');
             return false;
         }
 
+        // Try to get order_id from cache first (faster)
+        $order_id = \Cache::get('uddoktapay_invoice_' . $invoice_id);
+        
         \Log::info('UddoktaPay verifying payment for invoice: ' . $invoice_id);
         
         // Verify payment status
@@ -150,15 +159,22 @@ class UddoktaPay implements PaymentInterface
         if (isset($result['status'])) {
             $status = strtoupper($result['status']);
             
-            if ($status === 'COMPLETED' && isset($result['metadata']['order_id'])) {
-                \Log::info('UddoktaPay payment completed for order: ' . $result['metadata']['order_id']);
-                // Clear the stored invoice_id
-                session()->forget('uddoktapay_invoice_id');
-                return [
-                    'trade_no' => $result['metadata']['order_id'],
-                    'callback_no' => $result['transaction_id'] ?? $invoice_id,
-                    'custom_result' => json_encode(['returnCode' => 'SUCCESS', 'returnMessage' => null])
-                ];
+            if ($status === 'COMPLETED') {
+                // Use order_id from cache if available, otherwise from metadata
+                $order_id = $order_id ?? $result['metadata']['order_id'] ?? null;
+                
+                if ($order_id) {
+                    \Log::info('UddoktaPay payment completed for order: ' . $order_id);
+                    // Clear the stored data
+                    session()->forget('uddoktapay_invoice_id');
+                    \Cache::forget('uddoktapay_invoice_' . $invoice_id);
+                    
+                    return [
+                        'trade_no' => $order_id,
+                        'callback_no' => $result['transaction_id'] ?? $invoice_id,
+                        'custom_result' => '{"returnCode": "success","returnMsg": ""}'
+                    ];
+                }
             } else {
                 \Log::warning('UddoktaPay payment not completed. Status: ' . $status);
             }
@@ -167,5 +183,26 @@ class UddoktaPay implements PaymentInterface
         }
         
         return false;
+    }
+
+    /**
+     * Ensure URL is HTTPS and absolute
+     * 
+     * @param string $url
+     * @return string
+     */
+    protected function ensureHttpsUrl($url): string
+    {
+        // If URL is relative, make it absolute using app URL
+        if (strpos($url, 'http') !== 0) {
+            $url = config('app.url') . '/' . ltrim($url, '/');
+        }
+        
+        // Force HTTPS if not already
+        if (strpos($url, 'https://') !== 0) {
+            $url = 'https://' . substr($url, strpos($url, '://') + 3);
+        }
+        
+        return $url;
     }
 } 
