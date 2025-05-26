@@ -85,6 +85,11 @@ class UddoktaPay implements PaymentInterface
         $result = json_decode($response, true);
 
         if (isset($result['status']) && $result['status'] === true && isset($result['payment_url'])) {
+            // Store the invoice_id in session for verification
+            if (isset($result['invoice_id'])) {
+                session(['uddoktapay_invoice_id' => $result['invoice_id']]);
+            }
+            
             return [
                 'type' => 1, // Redirect to url
                 'data' => $result['payment_url']
@@ -100,47 +105,24 @@ class UddoktaPay implements PaymentInterface
     {
         \Log::info('UddoktaPay callback received: ' . json_encode($params));
         
-        // UddoktaPay sends the invoice_id as a query parameter to the redirect_url after payment
-        // It doesn't send active notifications, so we need to check for the invoice_id from the redirect
-        $invoice_id = null;
+        // Get invoice_id from multiple sources
+        $invoice_id = $_GET['invoice_id'] ?? $params['invoice_id'] ?? session('uddoktapay_invoice_id') ?? null;
         
-        // Check if the invoice_id is in the request query parameters
-        if (isset($_GET['invoice_id'])) {
-            $invoice_id = $_GET['invoice_id'];
-            \Log::info('UddoktaPay invoice_id found in GET parameters: ' . $invoice_id);
-        } 
-        // Also check POST data as a fallback
-        else if (isset($params['invoice_id'])) {
-            $invoice_id = $params['invoice_id'];
-            \Log::info('UddoktaPay invoice_id found in POST parameters: ' . $invoice_id);
-        } else {
-            \Log::error('UddoktaPay callback: Missing invoice_id in both GET and POST parameters');
+        if (!$invoice_id) {
+            \Log::error('UddoktaPay callback: Missing invoice_id');
             return false;
         }
 
-        // Now we need to verify the payment status using the invoice_id
-        return $this->verifyPayment($invoice_id);
-    }
-
-    /**
-     * Verify payment status with UddoktaPay API
-     * 
-     * @param string $invoice_id
-     * @return array|bool
-     */
-    protected function verifyPayment($invoice_id): array|bool
-    {
+        \Log::info('UddoktaPay verifying payment for invoice: ' . $invoice_id);
+        
+        // Verify payment status
         $baseUrl = rtrim($this->config['api_url'], '/');
         $apiKey = $this->config['api_key'];
 
-        \Log::info('UddoktaPay verifying payment for invoice: ' . $invoice_id);
-
-        // Prepare verification data
         $verifyData = [
             'invoice_id' => $invoice_id
         ];
 
-        // Prepare cURL request to verify payment
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $baseUrl . '/api/verify-payment');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -152,7 +134,6 @@ class UddoktaPay implements PaymentInterface
             'content-type: application/json'
         ]);
 
-        // Execute the request
         $response = curl_exec($ch);
         $err = curl_error($ch);
         curl_close($ch);
@@ -165,15 +146,18 @@ class UddoktaPay implements PaymentInterface
         $result = json_decode($response, true);
         \Log::info('UddoktaPay verification response: ' . json_encode($result));
 
-        // Check if payment is completed
+        // Check payment status
         if (isset($result['status'])) {
             $status = strtoupper($result['status']);
             
             if ($status === 'COMPLETED' && isset($result['metadata']['order_id'])) {
                 \Log::info('UddoktaPay payment completed for order: ' . $result['metadata']['order_id']);
+                // Clear the stored invoice_id
+                session()->forget('uddoktapay_invoice_id');
                 return [
                     'trade_no' => $result['metadata']['order_id'],
-                    'callback_no' => $result['transaction_id']
+                    'callback_no' => $result['transaction_id'] ?? $invoice_id,
+                    'custom_result' => json_encode(['returnCode' => 'SUCCESS', 'returnMessage' => null])
                 ];
             } else {
                 \Log::warning('UddoktaPay payment not completed. Status: ' . $status);
