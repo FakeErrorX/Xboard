@@ -4,6 +4,7 @@ namespace App\Payments;
 
 use App\Contracts\PaymentInterface;
 use App\Exceptions\ApiException;
+use Illuminate\Support\Facades\Http;
 
 class UddoktaPay implements PaymentInterface
 {
@@ -17,192 +18,103 @@ class UddoktaPay implements PaymentInterface
     public function form(): array
     {
         return [
-            'api_url' => [
-                'label' => 'API URL',
-                'description' => 'UddoktaPay API URL (e.g., https://pay.your-domain.com)',
+            'base_url' => [
+                'label' => 'Base URL',
+                'description' => 'UddoktaPay API URL (e.g. https://pay.yourdomain.com or https://sandbox.uddoktapay.com)',
                 'type' => 'input',
             ],
             'api_key' => [
                 'label' => 'API Key',
                 'description' => 'Your UddoktaPay API Key',
                 'type' => 'input',
-            ],
-            'rate' => [
-                'label' => 'Exchange Rate',
-                'description' => 'UddoktaPay uses BDT (Bangladeshi Taka) as its base currency. If your site uses a different currency, please specify the exchange rate.',
-                'type' => 'input',
-                'default' => '1'
-            ],
+            ]
         ];
     }
 
     public function pay($order): array
     {
-        $baseUrl = rtrim($this->config['api_url'], '/');
-        $apiKey = $this->config['api_key'];
+        // Ensure the base_url doesn't end with a slash
+        $baseUrl = rtrim($this->config['base_url'], '/');
         
-        // Apply currency conversion if rate is set
-        $amount = $order['total_amount'] / 100; // Convert from cents to actual currency unit
-        if (isset($this->config['rate']) && $this->config['rate'] > 0) {
-            $amount = $amount * $this->config['rate'];
-        }
-
-        // Ensure URLs are HTTPS and absolute
-        $returnUrl = $this->ensureHttpsUrl($order['return_url']);
-        $notifyUrl = $this->ensureHttpsUrl($order['notify_url']);
-
-        // Prepare payment data
-        $data = [
-            'amount' => $amount,
-            'full_name' => 'Customer', // You might want to replace with actual user name if available
-            'email' => 'customer@example.com', // Replace with actual user email if available
+        $payload = [
+            'full_name' => 'Customer',
+            'email' => 'customer@example.com',
+            'amount' => $order['total_amount'] / 100, // Convert from cents to whole currency unit
             'metadata' => [
-                'order_id' => $order['trade_no']
+                'order_id' => $order['trade_no'],
             ],
-            'redirect_url' => $returnUrl,
-            'cancel_url' => $returnUrl,
-            'webhook_url' => $notifyUrl,
+            'redirect_url' => $order['return_url'],
+            'cancel_url' => $order['return_url'],
+            'webhook_url' => $order['notify_url'],
         ];
 
-        // Prepare cURL request
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $baseUrl . '/api/checkout-v2');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'RT-UDDOKTAPAY-API-KEY: ' . $apiKey,
-            'accept: application/json',
-            'content-type: application/json'
-        ]);
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
+            ])->post("{$baseUrl}/api/checkout-v2", $payload);
 
-        // Execute the request
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($err) {
-            \Log::error('UddoktaPay payment error: ' . $err);
-            throw new ApiException('Payment gateway error: ' . $err);
-        }
-
-        $result = json_decode($response, true);
-
-        if (isset($result['status']) && $result['status'] === true && isset($result['payment_url'])) {
-            // Store the invoice_id in session for verification
-            if (isset($result['invoice_id'])) {
-                session(['uddoktapay_invoice_id' => $result['invoice_id']]);
-                // Also store in cache for webhook verification
-                \Cache::put('uddoktapay_invoice_' . $result['invoice_id'], $order['trade_no'], now()->addHours(24));
+            $responseData = $response->json();
+            
+            if (!$response->successful() || !isset($responseData['payment_url'])) {
+                $errorMessage = $responseData['message'] ?? 'Payment initialization failed';
+                throw new ApiException($errorMessage);
             }
             
             return [
-                'type' => 1, // Redirect to url
-                'data' => $result['payment_url']
+                'type' => 1, // URL redirect
+                'data' => $responseData['payment_url']
             ];
-        } else {
-            $message = isset($result['message']) ? $result['message'] : 'Unknown error';
-            \Log::error('UddoktaPay payment error: ' . $message);
-            throw new ApiException('Payment error: ' . $message);
+            
+        } catch (\Exception $e) {
+            throw new ApiException('UddoktaPay Error: ' . $e->getMessage());
         }
     }
 
     public function notify($params): array|bool
     {
-        \Log::info('UddoktaPay webhook received: ' . json_encode($params));
-        
-        // Get invoice_id from multiple sources
-        $invoice_id = $_GET['invoice_id'] ?? $params['invoice_id'] ?? session('uddoktapay_invoice_id') ?? null;
-        
-        if (!$invoice_id) {
-            \Log::error('UddoktaPay webhook: Missing invoice_id');
+        // If webhook data is coming directly from the request body
+        if (empty($params) && request()->getContent()) {
+            $params = json_decode(request()->getContent(), true) ?? [];
+        }
+
+        // Validate the webhook by verifying invoice_id
+        if (!isset($params['invoice_id'])) {
             return false;
         }
 
-        // Try to get order_id from cache first (faster)
-        $order_id = \Cache::get('uddoktapay_invoice_' . $invoice_id);
-        
-        \Log::info('UddoktaPay verifying payment for invoice: ' . $invoice_id);
-        
-        // Verify payment status
-        $baseUrl = rtrim($this->config['api_url'], '/');
-        $apiKey = $this->config['api_key'];
+        try {
+            // Verify payment status with UddoktaPay API
+            $baseUrl = rtrim($this->config['base_url'], '/');
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
+            ])->post("{$baseUrl}/api/verify-payment", [
+                'invoice_id' => $params['invoice_id']
+            ]);
 
-        $verifyData = [
-            'invoice_id' => $invoice_id
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $baseUrl . '/api/verify-payment');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($verifyData));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'RT-UDDOKTAPAY-API-KEY: ' . $apiKey,
-            'accept: application/json',
-            'content-type: application/json'
-        ]);
-
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($err) {
-            \Log::error('UddoktaPay verification error: ' . $err);
-            return false;
-        }
-
-        $result = json_decode($response, true);
-        \Log::info('UddoktaPay verification response: ' . json_encode($result));
-
-        // Check payment status
-        if (isset($result['status'])) {
-            $status = strtoupper($result['status']);
+            $paymentData = $response->json();
             
-            if ($status === 'COMPLETED') {
-                // Use order_id from cache if available, otherwise from metadata
-                $order_id = $order_id ?? $result['metadata']['order_id'] ?? null;
-                
-                if ($order_id) {
-                    \Log::info('UddoktaPay payment completed for order: ' . $order_id);
-                    // Clear the stored data
-                    session()->forget('uddoktapay_invoice_id');
-                    \Cache::forget('uddoktapay_invoice_' . $invoice_id);
-                    
-                    return [
-                        'trade_no' => $order_id,
-                        'callback_no' => $result['transaction_id'] ?? $invoice_id,
-                        'custom_result' => '{"returnCode": "success","returnMsg": ""}'
-                    ];
-                }
-            } else {
-                \Log::warning('UddoktaPay payment not completed. Status: ' . $status);
+            // Check if payment was successful
+            if (!$response->successful() || !isset($paymentData['metadata']['order_id'])) {
+                return false;
             }
-        } else {
-            \Log::error('UddoktaPay verification failed: Status field missing');
-        }
-        
-        return false;
-    }
 
-    /**
-     * Ensure URL is HTTPS and absolute
-     * 
-     * @param string $url
-     * @return string
-     */
-    protected function ensureHttpsUrl($url): string
-    {
-        // If URL is relative, make it absolute using app URL
-        if (strpos($url, 'http') !== 0) {
-            $url = config('app.url') . '/' . ltrim($url, '/');
+            // Check payment status
+            if ($paymentData['status'] !== 'COMPLETED') {
+                return false;
+            }
+            
+            return [
+                'trade_no' => $paymentData['metadata']['order_id'],
+                'callback_no' => $paymentData['transaction_id'],
+                'custom_result' => json_encode(['status' => 'success'])
+            ];
+            
+        } catch (\Exception $e) {
+            return false;
         }
-        
-        // Force HTTPS if not already
-        if (strpos($url, 'https://') !== 0) {
-            $url = 'https://' . substr($url, strpos($url, '://') + 3);
-        }
-        
-        return $url;
     }
-} 
+}
