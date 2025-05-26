@@ -98,28 +98,47 @@ class UddoktaPay implements PaymentInterface
 
     public function notify($params): array|bool
     {
-        \Log::info('UddoktaPay webhook received: ' . json_encode($params));
-
-        // For UddoktaPay webhook handling
-        if (isset($params['invoice_id'])) {
-            $invoice_id = $params['invoice_id'];
-        } else if (isset($_GET['invoice_id'])) {
-            // Sometimes UddoktaPay sends the invoice_id as a query parameter
+        \Log::info('UddoktaPay callback received: ' . json_encode($params));
+        
+        // UddoktaPay sends the invoice_id as a query parameter to the redirect_url after payment
+        // It doesn't send active notifications, so we need to check for the invoice_id from the redirect
+        $invoice_id = null;
+        
+        // Check if the invoice_id is in the request query parameters
+        if (isset($_GET['invoice_id'])) {
             $invoice_id = $_GET['invoice_id'];
+            \Log::info('UddoktaPay invoice_id found in GET parameters: ' . $invoice_id);
+        } 
+        // Also check POST data as a fallback
+        else if (isset($params['invoice_id'])) {
+            $invoice_id = $params['invoice_id'];
+            \Log::info('UddoktaPay invoice_id found in POST parameters: ' . $invoice_id);
         } else {
-            \Log::error('UddoktaPay webhook: Missing invoice_id');
+            \Log::error('UddoktaPay callback: Missing invoice_id in both GET and POST parameters');
             return false;
         }
 
+        // Now we need to verify the payment status using the invoice_id
+        return $this->verifyPayment($invoice_id);
+    }
+
+    /**
+     * Verify payment status with UddoktaPay API
+     * 
+     * @param string $invoice_id
+     * @return array|bool
+     */
+    protected function verifyPayment($invoice_id): array|bool
+    {
         $baseUrl = rtrim($this->config['api_url'], '/');
         $apiKey = $this->config['api_key'];
+
+        \Log::info('UddoktaPay verifying payment for invoice: ' . $invoice_id);
 
         // Prepare verification data
         $verifyData = [
             'invoice_id' => $invoice_id
         ];
-
-        \Log::info('UddoktaPay verifying payment: ' . $invoice_id);
 
         // Prepare cURL request to verify payment
         $ch = curl_init();
@@ -146,7 +165,7 @@ class UddoktaPay implements PaymentInterface
         $result = json_decode($response, true);
         \Log::info('UddoktaPay verification response: ' . json_encode($result));
 
-        // Check if payment is completed - explicitly check for uppercase "COMPLETED" per documentation
+        // Check if payment is completed
         if (isset($result['status'])) {
             $status = strtoupper($result['status']);
             
