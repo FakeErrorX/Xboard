@@ -62,7 +62,7 @@ apt update && apt install -y git
 yum update && yum install -y git
 
 # Clone repository
-git clone -b compose --depth 1 https://github.com/FakeErrorX/Xboard ./
+git clone -b compose --depth 1 https://github.com/fakeerrorx/Xboard ./
 
 # Configure Docker Compose
 ```
@@ -71,7 +71,7 @@ git clone -b compose --depth 1 https://github.com/FakeErrorX/Xboard ./
 ```yaml
 services:
   web:
-    image: ghcr.io/FakeErrorX/xboard:new
+    image: ghcr.io/fakeerrorx/xboard:new
     volumes:
       - ./.docker/.data/redis/:/data/
       - ./.env:/www/.env
@@ -91,7 +91,7 @@ services:
       - 1panel-network
 
   horizon:
-    image: ghcr.io/FakeErrorX/xboard:new
+    image: ghcr.io/fakeerrorx/xboard:new
     volumes:
       - ./.docker/.data/redis/:/data/
       - ./.env:/www/.env

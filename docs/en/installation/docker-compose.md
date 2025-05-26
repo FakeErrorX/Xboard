@@ -17,7 +17,7 @@ systemctl start docker
 
 1. Get project files:
 ```bash
-git clone -b compose --depth 1 https://github.com/FakeErrorX/Xboard
+git clone -b compose --depth 1 https://github.com/fakeerrorx/Xboard
 cd Xboard
 ```
 

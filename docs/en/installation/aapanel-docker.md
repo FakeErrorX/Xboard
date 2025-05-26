@@ -66,7 +66,7 @@ chattr -i .user.ini
 rm -rf .htaccess 404.html 502.html index.html .user.ini
 
 # Clone repository
-git clone https://github.com/FakeErrorX/Xboard.git ./
+git clone https://github.com/fakeerrorx/Xboard.git ./
 
 # Prepare configuration file
 cp compose.sample.yaml compose.yaml
