@@ -19,7 +19,7 @@ class UddoktaPay implements PaymentInterface
         $this->apiHost = $this->config['base_url'] ?? 'https://pay.uddoktapay.com';
     }
 
-    public function form()
+    public function form(): array
     {
         return [
             'base_url' => [
