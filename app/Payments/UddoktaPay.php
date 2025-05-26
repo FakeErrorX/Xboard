@@ -98,9 +98,15 @@ class UddoktaPay implements PaymentInterface
 
     public function notify($params): array|bool
     {
-        // Webhook validation for UddoktaPay
-        // For UddoktaPay, we need to verify the payment using the invoice_id received in the webhook
-        if (!isset($params['invoice_id'])) {
+        \Log::info('UddoktaPay webhook received: ' . json_encode($params));
+
+        // For UddoktaPay webhook handling
+        if (isset($params['invoice_id'])) {
+            $invoice_id = $params['invoice_id'];
+        } else if (isset($_GET['invoice_id'])) {
+            // Sometimes UddoktaPay sends the invoice_id as a query parameter
+            $invoice_id = $_GET['invoice_id'];
+        } else {
             \Log::error('UddoktaPay webhook: Missing invoice_id');
             return false;
         }
@@ -110,8 +116,10 @@ class UddoktaPay implements PaymentInterface
 
         // Prepare verification data
         $verifyData = [
-            'invoice_id' => $params['invoice_id']
+            'invoice_id' => $invoice_id
         ];
+
+        \Log::info('UddoktaPay verifying payment: ' . $invoice_id);
 
         // Prepare cURL request to verify payment
         $ch = curl_init();
@@ -136,13 +144,23 @@ class UddoktaPay implements PaymentInterface
         }
 
         $result = json_decode($response, true);
+        \Log::info('UddoktaPay verification response: ' . json_encode($result));
 
-        // Check if payment is completed
-        if (isset($result['status']) && $result['status'] === 'COMPLETED' && isset($result['metadata']['order_id'])) {
-            return [
-                'trade_no' => $result['metadata']['order_id'],
-                'callback_no' => $result['transaction_id']
-            ];
+        // Check if payment is completed - explicitly check for uppercase "COMPLETED" per documentation
+        if (isset($result['status'])) {
+            $status = strtoupper($result['status']);
+            
+            if ($status === 'COMPLETED' && isset($result['metadata']['order_id'])) {
+                \Log::info('UddoktaPay payment completed for order: ' . $result['metadata']['order_id']);
+                return [
+                    'trade_no' => $result['metadata']['order_id'],
+                    'callback_no' => $result['transaction_id']
+                ];
+            } else {
+                \Log::warning('UddoktaPay payment not completed. Status: ' . $status);
+            }
+        } else {
+            \Log::error('UddoktaPay verification failed: Status field missing');
         }
         
         return false;
