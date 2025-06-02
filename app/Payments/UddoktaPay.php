@@ -2,116 +2,148 @@
 
 namespace App\Payments;
 
-use GuzzleHttp\Client;
 use App\Contracts\PaymentInterface;
 use App\Exceptions\ApiException;
+use GuzzleHttp\Client;
 
 class UddoktaPay implements PaymentInterface
 {
-    private $config;
-    private $client;
-    private $apiHost;
+    protected $config;
+    protected $client;
 
     public function __construct($config)
     {
         $this->config = $config;
         $this->client = new Client();
-        $this->apiHost = $this->config['base_url'] ?? 'https://pay.uddoktapay.com';
     }
 
     public function form(): array
     {
         return [
-            'base_url' => [
-                'label' => 'API URL',
-                'description' => 'UddoktaPay API URL (e.g. https://pay.your-domain.com)',
-                'type' => 'input',
-            ],
             'api_key' => [
                 'label' => 'API Key',
-                'description' => 'Collect API KEY from UddoktaPay Dashboard',
+                'description' => 'UddoktaPay API Key from Dashboard',
+                'type' => 'input',
+            ],
+            'base_url' => [
+                'label' => 'Base URL',
+                'description' => 'UddoktaPay API Base URL (e.g., https://pay.your-domain.com)',
                 'type' => 'input',
             ],
         ];
     }
 
-    public function pay($order)
+    public function pay($order): array
     {
+        if (empty($this->config['api_key'])) {
+            throw new ApiException('UddoktaPay API Key is required');
+        }
+
+        if (empty($this->config['base_url'])) {
+            throw new ApiException('UddoktaPay Base URL is required');
+        }
+
         try {
-            $response = $this->client->request('POST', "{$this->apiHost}/api/checkout-v2", [
+            $amount = sprintf('%.2f', $order['total_amount'] / 100);
+            
+            $params = [
+                'full_name' => 'User_' . $order['user_id'],
+                'email' => 'user_' . $order['user_id'] . '@example.com',
+                'amount' => $amount,
+                'metadata' => [
+                    'trade_no' => $order['trade_no'],
+                    'user_id' => $order['user_id']
+                ],
+                'redirect_url' => $order['return_url'],
+                'cancel_url' => $order['return_url'],
+                'webhook_url' => $order['notify_url'],
+                'return_type' => 'GET'
+            ];
+
+            $response = $this->client->request('POST', rtrim($this->config['base_url'], '/') . '/api/checkout-v2', [
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
                     'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
                 ],
-                'json' => [
-                    'full_name' => $order['email'] ?? 'Customer',
-                    'email' => $order['email'] ?? 'customer@example.com',
-                    'amount' => sprintf('%.2f', $order['total_amount'] / 100),
-                    'metadata' => [
-                        'order_id' => $order['trade_no']
-                    ],
-                    'redirect_url' => $order['return_url'],
-                    'cancel_url' => $order['return_url'],
-                    'webhook_url' => $order['notify_url'] ?? '',
-                    'return_type' => 'GET'
-                ]
+                'json' => $params
             ]);
 
-            $result = json_decode($response->getBody(), true);
+            $result = json_decode($response->getBody()->getContents(), true);
 
-            if (isset($result['payment_url'])) {
-                return [
-                    'type' => 1, // 0:qrcode 1:url
-                    'data' => $result['payment_url']
-                ];
-            } else {
-                throw new ApiException('UddoktaPay payment URL not found in response');
+            if (!isset($result['payment_url'])) {
+                throw new ApiException('UddoktaPay payment creation failed');
             }
+
+            return [
+                'type' => 1, // Redirect to URL
+                'data' => $result['payment_url']
+            ];
         } catch (\Exception $e) {
-            throw new ApiException('UddoktaPay Error: ' . $e->getMessage());
+            \Log::error('UddoktaPay payment error: ' . $e->getMessage());
+            throw new ApiException('UddoktaPay payment error: ' . $e->getMessage());
         }
     }
 
     public function notify($params)
     {
-        $invoiceId = $params['invoice_id'] ?? request()->input('invoice_id');
-        
-        if (empty($invoiceId)) {
-            throw new ApiException('Invoice ID not found');
-        }
-
         try {
-            $response = $this->client->request('POST', "{$this->apiHost}/api/verify-payment", [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json',
-                    'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
-                ],
-                'json' => [
-                    'invoice_id' => $invoiceId
-                ]
-            ]);
+            $payload = request()->getContent();
+            $data = json_decode($payload, true);
 
-            $result = json_decode($response->getBody(), true);
-
-            if (isset($result['status']) && $result['status'] === 'COMPLETED') {
-                // Extract trade_no from metadata
-                $tradeNo = $result['metadata']['order_id'] ?? '';
-                
-                if (empty($tradeNo)) {
-                    throw new ApiException('Trade number not found in payment response');
-                }
-
-                return [
-                    'trade_no' => $tradeNo,
-                    'callback_no' => $invoiceId
-                ];
+            if (!$data) {
+                throw new ApiException('Invalid webhook data');
             }
+
+            // Verify the payment status
+            if (!isset($data['status']) || $data['status'] !== 'COMPLETED') {
+                return false;
+            }
+
+            // Extract metadata
+            if (!isset($data['metadata']) || !isset($data['metadata']['trade_no'])) {
+                throw new ApiException('Invalid metadata in webhook');
+            }
+
+            $tradeNo = $data['metadata']['trade_no'];
+            $invoiceId = $data['invoice_id'] ?? null;
+
+            if (!$invoiceId) {
+                throw new ApiException('Missing invoice ID in webhook');
+            }
+
+            // Verify payment with API
+            $this->verifyPayment($invoiceId);
+
+            return [
+                'trade_no' => $tradeNo,
+                'callback_no' => $invoiceId
+            ];
         } catch (\Exception $e) {
-            throw new ApiException('UddoktaPay Verification Error: ' . $e->getMessage());
+            \Log::error('UddoktaPay webhook error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    protected function verifyPayment($invoiceId)
+    {
+        $response = $this->client->request('POST', rtrim($this->config['base_url'], '/') . '/api/verify-payment', [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'RT-UDDOKTAPAY-API-KEY' => $this->config['api_key']
+            ],
+            'json' => [
+                'invoice_id' => $invoiceId
+            ]
+        ]);
+
+        $result = json_decode($response->getBody()->getContents(), true);
+
+        if (!isset($result['status']) || $result['status'] !== 'COMPLETED') {
+            throw new ApiException('Payment not completed');
         }
 
-        return false;
+        return $result;
     }
 }
