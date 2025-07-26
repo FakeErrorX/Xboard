@@ -1,0 +1,38 @@
+services:
+  web:
+    image: ghcr.io/fakeerrorx/xboard:new
+    volumes:
+      - ./.docker/.data/redis/:/data/
+      - ./.env:/www/.env
+      - ./.docker/.data/:/www/.docker/.data
+      - ./storage/logs:/www/storage/logs
+      - ./storage/theme:/www/storage/theme
+      - ./plugins:/www/plugins
+    environment:
+      - docker=true
+    depends_on:
+      - redis
+    # network_mode: host
+    command: php artisan octane:start --host=0.0.0.0 --port=7001
+    restart: on-failure
+    ports:
+      - 7001:7001
+  horizon:
+    image: ghcr.io/fakeerrorx/xboard:new
+    volumes:
+      - ./.docker/.data/redis/:/data/
+      - ./.env:/www/.env
+      - ./.docker/.data/:/www/.docker/.data
+      - ./storage/logs:/www/storage/logs
+      - ./plugins:/www/plugins
+    restart: on-failure
+    # network_mode: host
+    command: php artisan horizon
+    depends_on:
+      - redis
+  redis:
+    image: redis:7-alpine
+    command: redis-server --unixsocket /data/redis.sock --unixsocketperm 777 --save 900 1 --save 300 10 --save 60 10000
+    restart: unless-stopped
+    volumes:
+      - ./.docker/.data/redis:/data
