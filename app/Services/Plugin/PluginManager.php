@@ -36,7 +36,30 @@ class PluginManager
      */
     public function getPluginPath(string $pluginCode): string
     {
-        return $this->pluginPath . '/' . Str::studly($pluginCode);
+        $expectedPath = $this->pluginPath . '/' . Str::studly($pluginCode);
+        
+        // If the expected path exists, return it
+        if (is_dir($expectedPath)) {
+            return $expectedPath;
+        }
+        
+        // Try case-insensitive search
+        $expectedDirName = Str::studly($pluginCode);
+        if (is_dir($this->pluginPath)) {
+            $directories = @scandir($this->pluginPath);
+            if ($directories !== false) {
+                foreach ($directories as $dir) {
+                    if ($dir === '.' || $dir === '..') continue;
+                    
+                    if (strtolower($dir) === strtolower($expectedDirName)) {
+                        return $this->pluginPath . '/' . $dir;
+                    }
+                }
+            }
+        }
+        
+        // Return the expected path even if it doesn't exist (for error handling)
+        return $expectedPath;
     }
 
     /**
@@ -137,10 +160,36 @@ class PluginManager
      */
     public function install(string $pluginCode): bool
     {
-        $configFile = $this->getPluginPath($pluginCode) . '/config.json';
+        $pluginPath = $this->getPluginPath($pluginCode);
+        $configFile = $pluginPath . '/config.json';
 
         if (!File::exists($configFile)) {
-            throw new \Exception('Plugin config file not found');
+            $availablePluginDirs = 'unknown';
+            if (is_dir($this->pluginPath)) {
+                $dirs = @scandir($this->pluginPath);
+                if ($dirs !== false) {
+                    $availablePluginDirs = array_diff($dirs, ['.', '..']);
+                }
+            }
+            
+            $pluginDirFiles = 'unknown';
+            if (is_dir($pluginPath)) {
+                $files = @scandir($pluginPath);
+                if ($files !== false) {
+                    $pluginDirFiles = $files;
+                }
+            }
+            
+            Log::error("Plugin config file not found", [
+                'plugin_code' => $pluginCode,
+                'plugin_path' => $pluginPath,
+                'config_file' => $configFile,
+                'plugins_base_path' => $this->pluginPath,
+                'directory_exists' => is_dir($pluginPath),
+                'files_in_plugin_dir' => $pluginDirFiles,
+                'available_plugin_dirs' => $availablePluginDirs
+            ]);
+            throw new \Exception("Plugin config file not found: {$configFile}");
         }
 
         $config = json_decode(File::get($configFile), true);

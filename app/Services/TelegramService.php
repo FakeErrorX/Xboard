@@ -66,7 +66,7 @@ class TelegramService
     }
 
     /**
-     * 注册 Bot 命令列表
+     * Register Bot command list
      */
     public function registerBotCommands(): void
     {
@@ -74,7 +74,7 @@ class TelegramService
             $commands = HookManager::filter('telegram.bot.commands', []);
 
             if (empty($commands)) {
-                Log::warning('没有找到任何 Telegram Bot 命令');
+                Log::warning('No Telegram Bot commands found');
                 return;
             }
 
@@ -83,13 +83,13 @@ class TelegramService
                 'scope' => json_encode(['type' => 'default'])
             ]);
 
-            Log::info('Telegram Bot 命令注册成功', [
+            Log::info('Telegram Bot command registration successful', [
                 'commands_count' => count($commands),
                 'commands' => $commands
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Telegram Bot 命令注册失败', [
+            Log::error('Telegram Bot command registration failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -97,7 +97,7 @@ class TelegramService
     }
 
     /**
-     * 获取当前注册的命令列表
+     * Get current registered command list
      */
     public function getMyCommands(): object
     {
@@ -105,7 +105,7 @@ class TelegramService
     }
 
     /**
-     * 删除所有命令
+     * Delete all commands
      */
     public function deleteMyCommands(): object
     {
@@ -131,30 +131,30 @@ class TelegramService
             $response = $this->http->get($this->apiUrl . $method, $params);
 
             if (!$response->successful()) {
-                throw new ApiException("HTTP 请求失败: {$response->status()}");
+                throw new ApiException("HTTP request failed: {$response->status()}");
             }
 
             $data = $response->object();
 
             if (!isset($data->ok)) {
-                throw new ApiException('无效的 Telegram API 响应');
+                throw new ApiException('Invalid Telegram API response');
             }
 
             if (!$data->ok) {
-                $description = $data->description ?? '未知错误';
-                throw new ApiException("Telegram API 错误: {$description}");
+                $description = $data->description ?? 'Unknown error';
+                throw new ApiException("Telegram API error: {$description}");
             }
 
             return $data;
 
         } catch (\Exception $e) {
-            Log::error('Telegram API 请求失败', [
+            Log::error('Telegram API request failed', [
                 'method' => $method,
                 'params' => $params,
                 'error' => $e->getMessage(),
             ]);
 
-            throw new ApiException("Telegram 服务错误: {$e->getMessage()}");
+            throw new ApiException("Telegram service error: {$e->getMessage()}");
         }
     }
 }

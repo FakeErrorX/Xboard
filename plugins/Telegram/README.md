@@ -1,84 +1,56 @@
-# Telegram 插件
+# Telegram Plugin
 
-XBoard 的 Telegram Bot 插件，提供用户账号绑定、流量查询、订阅链接获取等功能。
+XBoard's Telegram Bot plugin, providing user account binding, traffic query, subscription link retrieval and other functions.
 
-## 功能特性
+## Features
 
--   ✅ 工单通知功能（可配置开关）
--   ✅ 支付通知功能（可配置开关）
--   ✅ 用户账号绑定/解绑
--   ✅ 流量使用情况查询
--   ✅ 订阅链接获取
--   ✅ 工单回复支持
+-   ✅ Ticket notification function (configurable switch)
+-   ✅ Payment notification function (configurable switch)
+-   ✅ User account binding/unbinding
+-   ✅ Traffic usage query
+-   ✅ Subscription link retrieval
+-   ✅ Ticket reply support
 
-## 可用命令
+## Available Commands
 
-### `/start` - 开始使用
+### `/start` - Start using
 
-欢迎新用户并显示帮助信息，支持动态配置。
+Welcome new users and display help information, supports dynamic configuration.
 
-### `/bind` - 绑定账号
+### `/bind` - Bind account
 
-绑定用户的 XBoard 账号到 Telegram。
+Bind user's XBoard account to Telegram.
 
 ```
-/bind [订阅链接]
+/bind [subscription link]
 ```
 
-### `/traffic` - 查看流量
+### `/traffic` - View traffic
 
-查看当前绑定账号的流量使用情况。
+View traffic usage of currently bound account.
 
-### `/getlatesturl` - 获取订阅链接
+### `/getlatesturl` - Get subscription link
 
-获取最新的订阅链接。
+Get the latest subscription link.
 
-### `/unbind` - 解绑账号
+### `/unbind` - Unbind account
 
-解绑当前 Telegram 账号与 XBoard 账号的关联。
+Unbind the association between current Telegram account and XBoard account.
 
-## 配置选项
+## Configuration Options
 
-### 基础配置
+### Basic Configuration
 
-| 配置项       | 类型    | 默认值                                                                                     | 说明                 |
-| ------------ | ------- | ------------------------------------------------------------------------------------------ | -------------------- |
-| `auto_reply` | boolean | true                                                                                       | 是否自动回复未知命令 |
-| `help_text`  | text    | '请使用以下命令：\\n/bind - 绑定账号\\n/traffic - 查看流量\\n/getlatesturl - 获取最新链接' | 未知命令的回复文本   |
+| Config Item    | Type    | Default Value                                                                                     | Description                |
+| -------------- | ------- | ------------------------------------------------------------------------------------------------- | -------------------------- |
+| `auto_reply`   | boolean | true                                                                                              | Whether to auto-reply unknown commands |
+| `help_text`    | text    | 'Please use the following commands: \\n/bind - Bind account\\n/traffic - View traffic\\n/getlatesturl - Get latest link' | Reply text for unknown commands |
 
-### `/start` 命令动态配置
+### `/start` Command Dynamic Configuration
 
-| 配置项                  | 类型 | 说明                     |
-| ----------------------- | ---- | ------------------------ |
-| `start_welcome_title`   | text | 欢迎标题                 |
-| `start_bot_description` | text | 机器人功能介绍           |
-| `start_bind_guide`      | text | 未绑定用户的绑定指导     |
-| `start_unbind_guide`    | text | 已绑定用户显示的命令列表 |
-| `start_bind_commands`   | text | 未绑定用户显示的命令列表 |
-| `start_footer`          | text | 底部提示信息             |
-
-### 工单通知配置
-
-| 配置项                 | 类型    | 默认值 | 说明                 |
-| ---------------------- | ------- | ------ | -------------------- |
-| `enable_ticket_notify` | boolean | true   | 是否开启工单通知功能 |
-
-### 支付通知配置
-
-| 配置项                  | 类型    | 默认值 | 说明                 |
-| ----------------------- | ------- | ------ | -------------------- |
-| `enable_payment_notify` | boolean | true   | 是否开启支付通知功能 |
-
-## 使用流程
-
-### 新用户使用流程
-
-1. 用户首次使用 Bot，发送 `/start`
-2. 根据提示绑定账号：`/bind [订阅链接]`
-3. 绑定成功后即可使用其他功能
-
-### 日常使用流程
-
-1. 查看流量：`/traffic`
-2. 获取订阅链接：`/getlatesturl`
-3. 管理绑定：`/unbind`
+| Config Item                  | Type | Description                     |
+| ---------------------------- | ---- | ------------------------------- |
+| `start_welcome_title`        | text | Welcome title                   |
+| `start_bot_description`      | text | Bot feature introduction        |
+| `start_bind_guide`           | text | Binding guide for unbound users |
+| `start_unbind_guide`         | text | Command list for bound users    |

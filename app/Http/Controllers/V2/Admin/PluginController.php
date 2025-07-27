@@ -33,7 +33,7 @@ class PluginController extends Controller
                 [
                     'value' => Plugin::TYPE_FEATURE,
                     'label' => '功能',
-                    'description' => '提供功能扩展的插件，如Telegram登录、邮件通知等',
+                    'description' => 'Plugins that provide functional extensions, such as Telegram login, email notifications, etc.',
                     'icon' => '🔧'
                 ],
                 [

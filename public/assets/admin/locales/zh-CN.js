@@ -692,27 +692,27 @@ window.XBOARD_TRANSLATIONS['zh-CN'] = {
       }
     },
     "telegram": {
-      "title": "Telegram设置",
-      "description": "配置Telegram机器人功能，实现用户通知、账户绑定、指令交互等自动化服务。",
+      "title": "Telegram Settings",
+      "description": "Configure Telegram bot functionality, implement user notifications, account binding, command interaction and other automated services.",
       "bot_token": {
-        "title": "机器人令牌",
-        "description": "请输入从Botfather获取的令牌。",
+        "title": "Bot Token",
+        "description": "Please enter the token obtained from Botfather.",
         "placeholder": "0000000000:xxxxxxxxx_xxxxxxxxxxxxxxx"
       },
       "webhook": {
-        "title": "设置Webhook",
-        "description": "设置机器人的webhook，不设置将无法收到Telegram通知。",
-        "button": "一键设置",
-        "setting": "设置中...",
-        "success": "Webhook 设置成功"
+        "title": "Set Webhook",
+        "description": "Set the bot's webhook, without setting it you will not receive Telegram notifications.",
+        "button": "One-click Setup",
+        "setting": "Setting up...",
+        "success": "Webhook setup successful"
       },
       "bot_enable": {
-        "title": "启用Telegram绑定引导",
-        "description": "开启后将在用户端显示Telegram绑定引导，帮助用户绑定Telegram账户以接收通知。"
+        "title": "Enable Telegram Binding Guide",
+        "description": "After enabling, the Telegram binding guide will be displayed on the user side to help users bind Telegram accounts to receive notifications."
       },
       "discuss_link": {
-        "title": "群组链接",
-        "description": "填写后将在用户端显示或在需要的地方使用。",
+        "title": "Group Link",
+        "description": "After filling in, it will be displayed on the user side or used where needed.",
         "placeholder": "https://t.me/xxxxxx"
       }
     },
