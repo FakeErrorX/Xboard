@@ -1,6 +1,6 @@
 <?php
 
-namespace Plugin\Uddoktapay;
+namespace Plugin\UddoktaPay;
 
 use App\Services\Plugin\AbstractPlugin;
 use App\Contracts\PaymentInterface;

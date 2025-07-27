@@ -1,6 +1,6 @@
 {
     "name": "UddoktaPay",
-    "code": "uddoktapay",
+    "code": "uddokta_pay",
     "type": "payment",
     "version": "1.0.0",
     "description": "UddoktaPay payment automation plugin",
