@@ -1,6 +1,6 @@
 <?php
 
-namespace Plugin\UddoktaPay;
+namespace Plugin\Uddoktapay;
 
 use App\Services\Plugin\AbstractPlugin;
 use App\Contracts\PaymentInterface;
@@ -29,6 +29,21 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     public function form(): array
     {
         return [
+            'enabled' => [
+                'label' => '启用',
+                'type' => 'switch',
+                'default' => true
+            ],
+            'display_name' => [
+                'label' => '显示名称',
+                'type' => 'string',
+                'default' => 'UddoktaPay'
+            ],
+            'icon' => [
+                'label' => '图标',
+                'type' => 'string',
+                'default' => '💳'
+            ],
             'api_key' => [
                 'label' => 'API Key',
                 'type' => 'string',
