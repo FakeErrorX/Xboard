@@ -5,7 +5,6 @@ namespace App\Http\Controllers\V1\Guest;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderService;
-use App\Services\PaymentService;
 use App\Services\UddoktaPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,91 +15,80 @@ class UddoktaPayController extends Controller
     /**
      * Handle UddoktaPay webhook notifications
      * This follows the official UddoktaPay webhook validation documentation
+     * https://uddoktapay.readme.io/reference/validate-webhook
      */
     public function webhook(Request $request)
     {
         try {
             Log::info('UddoktaPay webhook received', [
                 'headers' => $request->headers->all(),
-                'body' => $request->getContent()
+                'content_length' => strlen($request->getContent())
             ]);
 
-            // Get the API key from the request headers (as per UddoktaPay documentation)
-            $headerApiKey = $request->header('RT-UDDOKTAPAY-API-KEY');
-            $configApiKey = config('uddoktapay.api_key');
-
-            // Verify the API key (as per UddoktaPay documentation)
-            if (!$headerApiKey || $headerApiKey !== $configApiKey) {
-                Log::error('UddoktaPay webhook unauthorized - invalid API key', [
-                    'header_api_key' => $headerApiKey,
-                    'config_api_key' => $configApiKey ? '***' : 'not_set'
-                ]);
-                return response()->json(['error' => 'Unauthorized Action'], 401);
-            }
-
-            // Get the request body (raw data)
+            // Get raw request data
             $rawData = $request->getContent();
-
-            // Parse the JSON data
+            
+            // Parse JSON data
             $webhookData = json_decode($rawData, true);
-
-            // Check if JSON data was successfully parsed
+            
             if ($webhookData === null) {
-                Log::error('UddoktaPay webhook invalid JSON data', ['raw_data' => $rawData]);
+                Log::error('UddoktaPay webhook invalid JSON data', [
+                    'raw_data' => substr($rawData, 0, 500) // Log first 500 chars
+                ]);
                 return response()->json(['error' => 'Invalid JSON data'], 400);
             }
 
-            Log::info('UddoktaPay webhook data parsed successfully', [
-                'webhook_data' => $webhookData
-            ]);
-
-            // Extract data from webhook payload (as per UddoktaPay documentation)
-            $invoiceId = $webhookData['invoice_id'] ?? '';
-            $status = $webhookData['status'] ?? '';
-            $metadata = $webhookData['metadata'] ?? [];
-            $tradeNo = $metadata['trade_no'] ?? '';
-
-            if (!$invoiceId) {
-                Log::error('UddoktaPay webhook missing invoice_id', ['webhook_data' => $webhookData]);
-                return response()->json(['error' => 'Missing invoice_id'], 400);
+            // Initialize UddoktaPay service
+            $uddoktaPayService = new UddoktaPayService();
+            
+            // Validate webhook authenticity
+            if (!$uddoktaPayService->validateWebhook($request->headers->all(), $webhookData)) {
+                return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            if (!$tradeNo) {
-                Log::error('UddoktaPay webhook missing trade_no in metadata', ['webhook_data' => $webhookData]);
-                return response()->json(['error' => 'Missing trade_no in metadata'], 400);
-            }
-
-            // Check if payment is completed
-            if ($status !== 'COMPLETED') {
-                Log::info('UddoktaPay webhook payment not completed', [
-                    'invoice_id' => $invoiceId,
-                    'status' => $status
+            // Process webhook payload
+            $result = $uddoktaPayService->processWebhook($webhookData);
+            
+            if (!$result['success']) {
+                Log::error('UddoktaPay webhook processing failed', [
+                    'error' => $result['message'],
+                    'webhook_data' => $webhookData
                 ]);
-                return response()->json(['status' => 'ignored - payment not completed'], 200);
+                return response()->json(['error' => $result['message']], 400);
             }
 
-            Log::info('UddoktaPay webhook payment completed', [
-                'invoice_id' => $invoiceId,
-                'trade_no' => $tradeNo,
-                'status' => $status,
-                'amount' => $webhookData['amount'] ?? 0,
-                'payment_method' => $webhookData['payment_method'] ?? 'unknown'
-            ]);
+            // Skip if already processed
+            if (isset($result['already_processed']) && $result['already_processed']) {
+                Log::info('UddoktaPay webhook order already processed', [
+                    'invoice_id' => $result['invoice_id'] ?? 'unknown'
+                ]);
+                return response()->json(['status' => 'already_processed'], 200);
+            }
 
-            // Process the payment in Xboard
-            if (!$this->processPayment($tradeNo, $invoiceId, $webhookData)) {
+            // Only process completed payments
+            if ($result['status'] !== 'COMPLETED') {
+                Log::info('UddoktaPay webhook payment not completed', [
+                    'status' => $result['status'],
+                    'invoice_id' => $result['invoice_id']
+                ]);
+                return response()->json(['status' => 'payment_not_completed'], 200);
+            }
+
+            // Process the order payment
+            $order = $result['order'];
+            if (!$this->processOrderPayment($order, $result['invoice_id'], $webhookData)) {
                 return response()->json(['error' => 'Order processing failed'], 500);
             }
 
-            Log::info('UddoktaPay webhook payment processed successfully', [
-                'invoice_id' => $invoiceId,
-                'trade_no' => $tradeNo
+            Log::info('UddoktaPay webhook processed successfully', [
+                'trade_no' => $order->trade_no,
+                'invoice_id' => $result['invoice_id']
             ]);
 
             return response()->json(['status' => 'success']);
 
         } catch (\Exception $e) {
-            Log::error('UddoktaPay webhook processing error', [
+            Log::error('UddoktaPay webhook error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -109,91 +97,51 @@ class UddoktaPayController extends Controller
     }
 
     /**
-     * Process the payment in Xboard system
+     * Process order payment after webhook validation
      */
-    private function processPayment(string $tradeNo, string $invoiceId, array $paymentData): bool
+    private function processOrderPayment(Order $order, string $invoiceId, array $webhookData): bool
     {
         try {
-            $order = Order::where('trade_no', $tradeNo)->first();
-            
-            if (!$order) {
-                Log::error('UddoktaPay order not found', ['trade_no' => $tradeNo]);
-                return false;
-            }
-
+            // Check if order is already processed
             if ($order->status !== Order::STATUS_PENDING) {
                 Log::info('UddoktaPay order already processed', [
-                    'trade_no' => $tradeNo,
-                    'status' => $order->status
+                    'trade_no' => $order->trade_no,
+                    'current_status' => $order->status
                 ]);
                 return true;
             }
 
-            // First mark as paid (processing)
+            // Mark order as paid using OrderService
             $orderService = new OrderService($order);
             
             if (!$orderService->paid($invoiceId)) {
-                Log::error('UddoktaPay order payment processing failed', ['trade_no' => $tradeNo]);
+                Log::error('UddoktaPay order payment marking failed', [
+                    'trade_no' => $order->trade_no,
+                    'invoice_id' => $invoiceId
+                ]);
                 return false;
             }
 
-            // Then mark as completed
-            if (!$this->completeOrder($order)) {
-                Log::error('UddoktaPay order completion failed', ['trade_no' => $tradeNo]);
-                return false;
-            }
-
-            // Log additional payment details
-            Log::info('UddoktaPay order payment completed', [
-                'trade_no' => $tradeNo,
+            // Log successful payment processing
+            Log::info('UddoktaPay order payment processed successfully', [
+                'trade_no' => $order->trade_no,
                 'invoice_id' => $invoiceId,
-                'amount' => $paymentData['amount'] ?? 0,
-                'payment_method' => $paymentData['payment_method'] ?? 'unknown',
-                'transaction_id' => $paymentData['transaction_id'] ?? '',
-                'sender_number' => $paymentData['sender_number'] ?? ''
+                'amount' => $webhookData['amount'] ?? 0,
+                'payment_method' => $webhookData['payment_method'] ?? 'unknown',
+                'transaction_id' => $webhookData['transaction_id'] ?? '',
+                'sender_number' => $webhookData['sender_number'] ?? ''
             ]);
 
+            // Trigger success hook
             HookManager::call('payment.notify.success', $order);
             
             return true;
 
         } catch (\Exception $e) {
-            Log::error('UddoktaPay payment processing error', [
+            Log::error('UddoktaPay order payment processing error', [
                 'error' => $e->getMessage(),
-                'trade_no' => $tradeNo
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Complete the order after payment verification
-     */
-    private function completeOrder(Order $order): bool
-    {
-        try {
-            // Update order status to completed
-            $order->status = Order::STATUS_COMPLETED;
-            $order->updated_at = time();
-            
-            if (!$order->save()) {
-                Log::error('UddoktaPay failed to save completed order status', [
-                    'trade_no' => $order->trade_no
-                ]);
-                return false;
-            }
-
-            Log::info('UddoktaPay order marked as completed', [
                 'trade_no' => $order->trade_no,
-                'status' => $order->status
-            ]);
-
-            return true;
-
-        } catch (\Exception $e) {
-            Log::error('UddoktaPay order completion error', [
-                'error' => $e->getMessage(),
-                'trade_no' => $order->trade_no
+                'invoice_id' => $invoiceId
             ]);
             return false;
         }
@@ -201,6 +149,7 @@ class UddoktaPayController extends Controller
 
     /**
      * Manual payment verification endpoint
+     * This can be used by administrators to manually verify payments
      */
     public function verifyPayment(Request $request)
     {
@@ -215,30 +164,41 @@ class UddoktaPayController extends Controller
                 'invoice_id' => $invoiceId
             ]);
             
-            // Use the UddoktaPay service to verify
+            // Initialize UddoktaPay service
             $uddoktaPayService = new UddoktaPayService();
+            
+            // Verify payment with UddoktaPay API
             $result = $uddoktaPayService->verifyPayment($invoiceId);
             
-            if (!$result) {
+            if (!$result['success']) {
                 Log::error('UddoktaPay manual verification failed', [
-                    'invoice_id' => $invoiceId
+                    'invoice_id' => $invoiceId,
+                    'error' => $result['message'] ?? 'Unknown error'
                 ]);
-                return $this->fail([400, 'Payment verification failed']);
+                return $this->fail([400, 'Payment verification failed: ' . ($result['message'] ?? 'Unknown error')]);
             }
 
             Log::info('UddoktaPay manual verification successful', [
                 'invoice_id' => $invoiceId,
-                'status' => $result['status'] ?? 'unknown'
+                'status' => $result['status'],
+                'amount' => $result['amount']
             ]);
 
-            return $this->success($result);
+            return $this->success([
+                'status' => $result['status'],
+                'amount' => $result['amount'],
+                'currency' => $result['currency'],
+                'payment_method' => $result['payment_method'],
+                'transaction_id' => $result['transaction_id'],
+                'metadata' => $result['metadata']
+            ]);
 
         } catch (\Exception $e) {
             Log::error('UddoktaPay manual verification error', [
                 'error' => $e->getMessage(),
                 'invoice_id' => $request->input('invoice_id')
             ]);
-            return $this->fail([500, 'Verification error']);
+            return $this->fail([500, 'Verification error: ' . $e->getMessage()]);
         }
     }
-} 
+}

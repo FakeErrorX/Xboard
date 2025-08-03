@@ -7,15 +7,19 @@ return [
     |--------------------------------------------------------------------------
     |
     | This file contains the configuration for UddoktaPay payment integration.
+    | Official UddoktaPay documentation: https://uddoktapay.readme.io/reference
     |
     */
 
     // API Configuration
-    'api_key' => env('UDDOKTAPAY_API_KEY', ''),
-    
-    // API Endpoints
-    'api_base_url' => env('UDDOKTAPAY_API_BASE_URL', 'https://api.uddoktapay.com/api'),
     'sandbox_mode' => env('UDDOKTAPAY_SANDBOX_MODE', true),
+    
+    // Sandbox Configuration
+    'sandbox_api_key' => env('UDDOKTAPAY_SANDBOX_API_KEY', '982d381360a69d419689740d9f2e26ce36fb7a50'),
+    
+    // Live Configuration
+    'live_api_key' => env('UDDOKTAPAY_LIVE_API_KEY', ''),
+    'live_base_url' => env('UDDOKTAPAY_LIVE_BASE_URL', ''),
     
     // Payment Settings
     'currency' => env('UDDOKTAPAY_CURRENCY', 'BDT'),
@@ -28,4 +32,7 @@ return [
     // Logging
     'log_webhooks' => env('UDDOKTAPAY_LOG_WEBHOOKS', true),
     'log_payments' => env('UDDOKTAPAY_LOG_PAYMENTS', true),
+    
+    // Payment Types
+    'payment_type' => env('UDDOKTAPAY_PAYMENT_TYPE', 'bangladeshi'), // 'bangladeshi' or 'global'
 ]; 

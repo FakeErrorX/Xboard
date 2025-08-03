@@ -9,250 +9,243 @@ use App\Models\User;
 
 class UddoktaPayService
 {
-    protected $apiKey;
-    protected $apiBaseUrl;
-    protected $sandboxMode;
-    protected $currency;
+    private $apiKey;
+    private $baseUrl;
+    private $sandboxMode;
 
-    public function __construct()
+    public function __construct($apiKey = null, $baseUrl = null, $sandboxMode = null)
     {
-        $this->apiKey = config('uddoktapay.api_key');
-        $this->apiBaseUrl = config('uddoktapay.api_base_url');
-        $this->sandboxMode = config('uddoktapay.sandbox_mode', true);
-        $this->currency = config('uddoktapay.currency', 'BDT');
-    }
+        $this->sandboxMode = $sandboxMode ?? config('uddoktapay.sandbox_mode', true);
+        
+        if ($this->sandboxMode) {
+            $this->apiKey = $apiKey ?? config('uddoktapay.sandbox_api_key', '982d381360a69d419689740d9f2e26ce36fb7a50');
+            $this->baseUrl = 'https://sandbox.uddoktapay.com/';
+        } else {
+            $this->apiKey = $apiKey ?? config('uddoktapay.live_api_key');
+            $this->baseUrl = $baseUrl ?? config('uddoktapay.live_base_url');
+        }
 
-    /**
-     * Create a new payment using UddoktaPay Create Charge API
-     */
-    public function createPayment(array $orderData): array
-    {
-        try {
-            // Get customer information
-            $customerEmail = $this->getCustomerEmail($orderData['user_id']);
-            $customerName = $this->getCustomerName($orderData['user_id']);
-            
-            $paymentData = [
-                'full_name' => $customerName,
-                'email' => $customerEmail,
-                'amount' => (string)($orderData['total_amount'] / 100), // Convert from cents to string
-                'metadata' => [
-                    'trade_no' => $orderData['trade_no'],
-                    'user_id' => (string)$orderData['user_id'],
-                    'order_type' => 'xboard_subscription'
-                ],
-                'redirect_url' => $orderData['return_url'],
-                'cancel_url' => $orderData['return_url'] . '?status=cancelled',
-                'webhook_url' => $orderData['notify_url'],
-                'return_type' => 'GET'
-            ];
+        if (!$this->apiKey) {
+            throw new \Exception('UddoktaPay API key is required');
+        }
 
-            // Determine API base URL based on sandbox mode
-            // Using official UddoktaPay sandbox URL from API Information
-            $apiBaseUrl = $this->sandboxMode ? 'https://sandbox.uddoktapay.com/' : 'https://pay.uddoktapay.com/';
+        if (!$this->baseUrl) {
+            throw new \Exception('UddoktaPay base URL is required');
+        }
 
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'RT-UDDOKTAPAY-API-KEY' => $this->apiKey,
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json'
-                ])
-                ->post($apiBaseUrl . 'api/checkout-v2', $paymentData);
-
-            if (!$response->successful()) {
-                Log::error('UddoktaPay payment creation failed', [
-                    'response' => $response->json(),
-                    'order_data' => $orderData,
-                    'status_code' => $response->status(),
-                    'sandbox_mode' => $this->sandboxMode,
-                    'api_base_url' => $apiBaseUrl
-                ]);
-                throw new \Exception('Failed to create payment: ' . $response->body());
-            }
-
-            $paymentResponse = $response->json();
-            
-            if (!$paymentResponse['status']) {
-                Log::error('UddoktaPay payment creation failed', [
-                    'message' => $paymentResponse['message'] ?? 'Unknown error',
-                    'order_data' => $orderData
-                ]);
-                throw new \Exception('Payment creation failed: ' . ($paymentResponse['message'] ?? 'Unknown error'));
-            }
-            
-            Log::info('UddoktaPay payment created successfully', [
-                'payment_url' => $paymentResponse['payment_url'] ?? null,
-                'trade_no' => $orderData['trade_no'],
-                'amount' => $paymentData['amount'],
-                'sandbox_mode' => $this->sandboxMode,
-                'api_base_url' => $apiBaseUrl
-            ]);
-
-            return [
-                'payment_url' => $paymentResponse['payment_url'],
-                'status' => 'pending'
-            ];
-
-        } catch (\Exception $e) {
-            Log::error('UddoktaPay payment creation error', [
-                'error' => $e->getMessage(),
-                'order_data' => $orderData,
-                'sandbox_mode' => $this->sandboxMode
-            ]);
-            throw $e;
+        // Ensure base URL ends with slash
+        if (!str_ends_with($this->baseUrl, '/')) {
+            $this->baseUrl .= '/';
         }
     }
 
     /**
-     * Verify payment via UddoktaPay Verify Payment API
+     * Create a payment charge
      */
-    public function verifyPayment(string $invoiceId): array|bool
+    public function createCharge(array $data, $useGlobal = false): array
     {
-        try {
-            // Determine API base URL based on sandbox mode
-            // Using official UddoktaPay sandbox URL from API Information
-            $apiBaseUrl = $this->sandboxMode ? 'https://sandbox.uddoktapay.com/' : 'https://pay.uddoktapay.com/';
+        $endpoint = $useGlobal ? 'api/checkout-global' : 'api/checkout-v2';
+        
+        $response = Http::withHeaders([
+            'RT-UDDOKTAPAY-API-KEY' => $this->apiKey,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ])->timeout(30)->post($this->baseUrl . $endpoint, $data);
+
+        if ($response->successful()) {
+            $responseData = $response->json();
             
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'RT-UDDOKTAPAY-API-KEY' => $this->apiKey,
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json'
-                ])
-                ->post($apiBaseUrl . 'api/verify-payment', [
-                    'invoice_id' => $invoiceId
-                ]);
-
-            if (!$response->successful()) {
-                Log::error('UddoktaPay payment verification failed', [
-                    'invoice_id' => $invoiceId,
-                    'response' => $response->json(),
-                    'status_code' => $response->status(),
-                    'sandbox_mode' => $this->sandboxMode,
-                    'api_base_url' => $apiBaseUrl
-                ]);
-                return false;
+            if (isset($responseData['payment_url'])) {
+                return [
+                    'success' => true,
+                    'payment_url' => $responseData['payment_url'],
+                    'message' => $responseData['message'] ?? 'Payment URL generated'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Payment URL not found in response',
+                    'data' => $responseData
+                ];
             }
+        } else {
+            $errorData = $response->json();
+            return [
+                'success' => false,
+                'message' => $errorData['message'] ?? 'API request failed',
+                'status_code' => $response->status()
+            ];
+        }
+    }
 
-            $paymentData = $response->json();
+    /**
+     * Verify a payment by invoice ID
+     */
+    public function verifyPayment(string $invoiceId): array
+    {
+        $response = Http::withHeaders([
+            'RT-UDDOKTAPAY-API-KEY' => $this->apiKey,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ])->timeout(30)->post($this->baseUrl . 'api/verify-payment', [
+            'invoice_id' => $invoiceId
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
             
-            // Check if API returned an error
-            if (isset($paymentData['status']) && $paymentData['status'] === 'ERROR') {
-                Log::error('UddoktaPay payment verification error', [
-                    'invoice_id' => $invoiceId,
-                    'message' => $paymentData['message'] ?? 'Unknown error',
-                    'sandbox_mode' => $this->sandboxMode
-                ]);
-                return false;
-            }
+            return [
+                'success' => true,
+                'status' => $data['status'] ?? 'UNKNOWN',
+                'amount' => $data['amount'] ?? null,
+                'currency' => $data['currency'] ?? null,
+                'payment_method' => $data['payment_method'] ?? null,
+                'transaction_id' => $data['transaction_id'] ?? null,
+                'sender_number' => $data['sender_number'] ?? null,
+                'metadata' => $data['metadata'] ?? [],
+                'full_data' => $data
+            ];
+        } else {
+            $errorData = $response->json();
+            return [
+                'success' => false,
+                'message' => $errorData['message'] ?? 'Verification failed',
+                'status_code' => $response->status()
+            ];
+        }
+    }
 
-            Log::info('UddoktaPay payment verification successful', [
-                'invoice_id' => $invoiceId,
-                'status' => $paymentData['status'] ?? 'unknown',
-                'amount' => $paymentData['amount'] ?? 0,
-                'payment_method' => $paymentData['payment_method'] ?? 'unknown',
-                'sandbox_mode' => $this->sandboxMode,
-                'api_base_url' => $apiBaseUrl
-            ]);
+    /**
+     * Validate webhook authenticity
+     */
+    public function validateWebhook(array $headers, array $payload): bool
+    {
+        $headerApiKey = $headers['RT-UDDOKTAPAY-API-KEY'] ?? 
+                       $headers['rt-uddoktapay-api-key'] ?? 
+                       $_SERVER['HTTP_RT_UDDOKTAPAY_API_KEY'] ?? null;
 
-            return $paymentData;
-
-        } catch (\Exception $e) {
-            Log::error('UddoktaPay payment verification error', [
-                'error' => $e->getMessage(),
-                'invoice_id' => $invoiceId,
-                'sandbox_mode' => $this->sandboxMode
+        if (!$headerApiKey || $headerApiKey !== $this->apiKey) {
+            Log::error('UddoktaPay: Webhook validation failed - API key mismatch', [
+                'expected_prefix' => substr($this->apiKey, 0, 8) . '...',
+                'received_prefix' => $headerApiKey ? substr($headerApiKey, 0, 8) . '...' : 'null'
             ]);
             return false;
         }
+
+        return true;
     }
 
     /**
-     * Process payment notification (called when user returns from payment)
+     * Process webhook payload
      */
-    public function processPaymentNotification(string $invoiceId): array|bool
+    public function processWebhook(array $payload): array
     {
-        try {
-            // Verify the payment using the API
-            $paymentData = $this->verifyPayment($invoiceId);
-            
-            if (!$paymentData) {
-                Log::error('UddoktaPay payment verification failed for notification', [
-                    'invoice_id' => $invoiceId
-                ]);
-                return false;
+        $requiredFields = ['invoice_id', 'status', 'metadata'];
+        
+        foreach ($requiredFields as $field) {
+            if (!isset($payload[$field])) {
+                return [
+                    'success' => false,
+                    'message' => "Missing required field: {$field}"
+                ];
             }
-
-            // Check if payment is completed
-            if ($paymentData['status'] !== 'COMPLETED') {
-                Log::info('UddoktaPay payment not completed', [
-                    'invoice_id' => $invoiceId,
-                    'status' => $paymentData['status']
-                ]);
-                return false;
-            }
-
-            // Extract trade number from metadata
-            $tradeNo = $paymentData['metadata']['trade_no'] ?? '';
-            
-            if (!$tradeNo) {
-                Log::error('UddoktaPay payment missing trade_no in metadata', [
-                    'invoice_id' => $invoiceId,
-                    'payment_data' => $paymentData
-                ]);
-                return false;
-            }
-
-            Log::info('UddoktaPay payment notification processed successfully - order will be completed', [
-                'invoice_id' => $invoiceId,
-                'trade_no' => $tradeNo,
-                'amount' => $paymentData['amount'] ?? 0,
-                'payment_method' => $paymentData['payment_method'] ?? 'unknown'
-            ]);
-
-            return [
-                'trade_no' => $tradeNo,
-                'callback_no' => $invoiceId,
-                'amount' => $paymentData['amount'] ?? 0,
-                'currency' => $this->currency,
-                'payment_method' => $paymentData['payment_method'] ?? 'unknown',
-                'transaction_id' => $paymentData['transaction_id'] ?? '',
-                'sender_number' => $paymentData['sender_number'] ?? '',
-                'completion_required' => true // Flag to indicate order should be completed
-            ];
-
-        } catch (\Exception $e) {
-            Log::error('UddoktaPay payment notification processing error', [
-                'error' => $e->getMessage(),
-                'invoice_id' => $invoiceId
-            ]);
-            return false;
         }
+
+        $metadata = $payload['metadata'];
+        $tradeNo = $metadata['trade_no'] ?? null;
+
+        if (!$tradeNo) {
+            return [
+                'success' => false,
+                'message' => 'Missing trade_no in metadata'
+            ];
+        }
+
+        // Verify the order exists
+        $order = Order::where('trade_no', $tradeNo)->first();
+        if (!$order) {
+            return [
+                'success' => false,
+                'message' => 'Order not found'
+            ];
+        }
+
+        // Check if payment is already processed
+        if ($order->status !== Order::STATUS_PENDING) {
+            return [
+                'success' => true,
+                'message' => 'Order already processed',
+                'already_processed' => true
+            ];
+        }
+
+        return [
+            'success' => true,
+            'order' => $order,
+            'invoice_id' => $payload['invoice_id'],
+            'status' => $payload['status'],
+            'amount' => $payload['amount'] ?? null,
+            'payment_method' => $payload['payment_method'] ?? null,
+            'transaction_id' => $payload['transaction_id'] ?? null
+        ];
     }
 
     /**
-     * Get customer email from user ID
+     * Create payment for Xboard order
      */
-    private function getCustomerEmail(int $userId): string
+    public function createOrderPayment(Order $order, array $options = []): array
     {
-        $user = User::find($userId);
-        return $user ? $user->email : 'customer@example.com';
+        $user = User::find($order->user_id);
+        if (!$user) {
+            return [
+                'success' => false,
+                'message' => 'User not found'
+            ];
+        }
+
+        $amount = number_format($order->total_amount / 100, 2, '.', '');
+        $currency = $options['currency'] ?? 'BDT';
+        $useGlobal = $options['use_global'] ?? false;
+
+        // Prepare customer name
+        $customerName = $user->name ?? $user->full_name ?? explode('@', $user->email)[0] ?? 'Xboard Customer';
+
+        $paymentData = [
+            'full_name' => $customerName,
+            'email' => $user->email,
+            'amount' => $amount,
+            'metadata' => [
+                'trade_no' => $order->trade_no,
+                'user_id' => (string)$order->user_id,
+                'order_type' => 'xboard_subscription',
+                'currency' => $currency,
+                'plan_id' => (string)$order->plan_id
+            ],
+            'redirect_url' => $options['return_url'] ?? url('/'),
+            'cancel_url' => $options['cancel_url'] ?? url('/?status=cancelled'),
+            'webhook_url' => $options['webhook_url'] ?? url('/api/v1/guest/payment/notify/UddoktaPay/' . config('app.key')),
+            'return_type' => 'GET'
+        ];
+
+        Log::info('UddoktaPay: Creating payment for order', [
+            'trade_no' => $order->trade_no,
+            'amount' => $amount,
+            'currency' => $currency,
+            'use_global' => $useGlobal
+        ]);
+
+        return $this->createCharge($paymentData, $useGlobal);
     }
 
     /**
-     * Get customer name from user ID
+     * Get API configuration info
      */
-    private function getCustomerName(int $userId): string
+    public function getConfig(): array
     {
-        $user = User::find($userId);
-        return $user ? ($user->name ?? $user->username ?? 'Customer') : 'Customer';
-    }
-
-    /**
-     * Check if service is properly configured
-     */
-    public function isConfigured(): bool
-    {
-        return !empty($this->apiKey);
+        return [
+            'sandbox_mode' => $this->sandboxMode,
+            'base_url' => $this->baseUrl,
+            'api_key_prefix' => substr($this->apiKey, 0, 8) . '...'
+        ];
     }
 } 
