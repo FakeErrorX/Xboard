@@ -34,51 +34,33 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                 'default' => false,
                 'description' => 'Enable UddoktaPay payment gateway'
             ],
-            'display_name' => [
-                'label' => 'Display Name',
-                'type' => 'string',
-                'default' => 'UddoktaPay',
-                'description' => 'Payment method display name for users'
-            ],
-            'icon' => [
-                'label' => 'Icon',
-                'type' => 'string',
-                'default' => '💳',
-                'description' => 'Payment method icon (emoji or text)'
-            ],
-            'sandbox_mode' => [
-                'label' => 'Sandbox Mode',
-                'type' => 'switch',
-                'default' => true,
-                'description' => 'Enable for testing with sandbox API, disable for live payments'
-            ],
-            'sandbox_api_key' => [
-                'label' => 'Sandbox API Key',
-                'type' => 'string',
-                'required' => false,
-                'default' => '982d381360a69d419689740d9f2e26ce36fb7a50',
-                'description' => 'UddoktaPay Sandbox API Key (default provided for testing)',
-                'show_when' => [
-                    'sandbox_mode' => true
-                ]
+            'mode' => [
+                'label' => 'Payment Mode',
+                'type' => 'select',
+                'options' => [
+                    ['value' => 'sandbox', 'label' => 'Sandbox (Testing)'],
+                    ['value' => 'live', 'label' => 'Live (Production)']
+                ],
+                'default' => 'sandbox',
+                'description' => 'Choose between sandbox for testing or live for production payments'
             ],
             'live_api_key' => [
                 'label' => 'Live API Key',
                 'type' => 'string',
-                'required' => false,
+                'required' => true,
                 'description' => 'Your UddoktaPay Live API Key (get from UddoktaPay Dashboard)',
                 'show_when' => [
-                    'sandbox_mode' => false
+                    'mode' => 'live'
                 ]
             ],
             'live_base_url' => [
                 'label' => 'Live Base URL',
                 'type' => 'string',
-                'required' => false,
+                'required' => true,
                 'placeholder' => 'https://pay.yourdomain.com',
                 'description' => 'Your UddoktaPay Live installation URL (required for live mode)',
                 'show_when' => [
-                    'sandbox_mode' => false
+                    'mode' => 'live'
                 ]
             ],
             'currency' => [
@@ -115,8 +97,9 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     public function pay($order): array
     {
         try {
-            $sandboxMode = $this->getConfig('sandbox_mode', true);
-            $apiKey = $sandboxMode ? $this->getConfig('sandbox_api_key') : $this->getConfig('live_api_key');
+            $mode = $this->getConfig('mode', 'sandbox');
+            $sandboxMode = ($mode === 'sandbox');
+            $apiKey = $sandboxMode ? '982d381360a69d419689740d9f2e26ce36fb7a50' : $this->getConfig('live_api_key');
             $currency = $this->getConfig('currency', 'BDT');
             $paymentType = $this->getConfig('payment_type', 'bangladeshi');
             
@@ -215,8 +198,9 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     public function notify($params): array|bool
     {
         try {
-            $sandboxMode = $this->getConfig('sandbox_mode', true);
-            $apiKey = $sandboxMode ? $this->getConfig('sandbox_api_key') : $this->getConfig('live_api_key');
+            $mode = $this->getConfig('mode', 'sandbox');
+            $sandboxMode = ($mode === 'sandbox');
+            $apiKey = $sandboxMode ? '982d381360a69d419689740d9f2e26ce36fb7a50' : $this->getConfig('live_api_key');
             
             if (!$apiKey) {
                 Log::error('UddoktaPay: API key not configured for webhook validation');
@@ -295,8 +279,9 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     public function verifyPayment($invoiceId): array|bool
     {
         try {
-            $sandboxMode = $this->getConfig('sandbox_mode', true);
-            $apiKey = $sandboxMode ? $this->getConfig('sandbox_api_key') : $this->getConfig('live_api_key');
+            $mode = $this->getConfig('mode', 'sandbox');
+            $sandboxMode = ($mode === 'sandbox');
+            $apiKey = $sandboxMode ? '982d381360a69d419689740d9f2e26ce36fb7a50' : $this->getConfig('live_api_key');
             
             if (!$apiKey) {
                 Log::error('UddoktaPay: API key not configured for verification');
