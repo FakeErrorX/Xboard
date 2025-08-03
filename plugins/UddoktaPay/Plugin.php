@@ -28,11 +28,15 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     public function form(): array
     {
         return [
-            'enabled' => [
-                'label' => 'Enable UddoktaPay',
-                'type' => 'switch',
-                'default' => false,
-                'description' => 'Enable UddoktaPay payment gateway'
+            'display_name' => [
+                'label' => 'Display Name',
+                'type' => 'string',
+                'description' => 'Payment method name shown to users'
+            ],
+            'icon' => [
+                'label' => 'Icon',
+                'type' => 'string',
+                'description' => 'Icon displayed next to payment method'
             ],
             'mode' => [
                 'label' => 'Payment Mode',
@@ -41,27 +45,17 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                     ['value' => 'sandbox', 'label' => 'Sandbox (Testing)'],
                     ['value' => 'live', 'label' => 'Live (Production)']
                 ],
-                'default' => 'sandbox',
                 'description' => 'Choose between sandbox for testing or live for production payments'
             ],
             'live_api_key' => [
                 'label' => 'Live API Key',
                 'type' => 'string',
-                'required' => true,
-                'description' => 'Your UddoktaPay Live API Key (get from UddoktaPay Dashboard)',
-                'show_when' => [
-                    'mode' => 'live'
-                ]
+                'description' => 'Your UddoktaPay Live API Key (required for live mode only)'
             ],
             'live_base_url' => [
                 'label' => 'Live Base URL',
                 'type' => 'string',
-                'required' => true,
-                'placeholder' => 'https://pay.yourdomain.com',
-                'description' => 'Your UddoktaPay Live installation URL (required for live mode)',
-                'show_when' => [
-                    'mode' => 'live'
-                ]
+                'description' => 'Your UddoktaPay Live installation URL (required for live mode only)'
             ],
             'currency' => [
                 'label' => 'Currency',
@@ -78,7 +72,6 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                     ['value' => 'QAR', 'label' => 'QAR - Qatari Riyal'],
                     ['value' => 'KWD', 'label' => 'KWD - Kuwaiti Dinar']
                 ],
-                'default' => 'BDT',
                 'description' => 'Payment currency (BDT for Bangladeshi methods, others for global)'
             ],
             'payment_type' => [
@@ -88,7 +81,6 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                     ['value' => 'bangladeshi', 'label' => 'Bangladeshi Methods (bKash, Rocket, Nagad, etc.)'],
                     ['value' => 'global', 'label' => 'Global Methods (Cards, PayPal, etc.)']
                 ],
-                'default' => 'bangladeshi',
                 'description' => 'Choose payment method type based on your target audience'
             ]
         ];
