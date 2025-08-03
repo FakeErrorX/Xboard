@@ -13,6 +13,94 @@ use App\Services\Plugin\HookManager;
 class UddoktaPayController extends Controller
 {
     /**
+     * Handle UddoktaPay return URL with invoice_id parameter
+     * This handles cases where users return from payment page before webhook is processed
+     */
+    public function handleReturn(Request $request)
+    {
+        try {
+            $invoiceId = $request->get('invoice_id');
+            
+            if (!$invoiceId) {
+                return redirect('/#/order?error=missing_invoice_id');
+            }
+
+            Log::info('UddoktaPay return URL accessed', [
+                'invoice_id' => $invoiceId,
+                'all_params' => $request->all()
+            ]);
+
+            // Initialize UddoktaPay service
+            $uddoktaPayService = new UddoktaPayService();
+            
+            // Verify the payment status using the invoice ID
+            $paymentResult = $uddoktaPayService->verifyPayment($invoiceId);
+            
+            if (!$paymentResult['success']) {
+                Log::error('UddoktaPay return verification failed', [
+                    'invoice_id' => $invoiceId,
+                    'error' => $paymentResult['message'] ?? 'Unknown error'
+                ]);
+                return redirect('/#/order?error=verification_failed');
+            }
+
+            // Extract trade_no from verification result
+            $tradeNo = $paymentResult['metadata']['trade_no'] ?? null;
+            
+            if (!$tradeNo) {
+                Log::error('UddoktaPay return missing trade_no', [
+                    'invoice_id' => $invoiceId,
+                    'verification_result' => $paymentResult
+                ]);
+                return redirect('/#/order?error=missing_trade_no');
+            }
+
+            // Find the order
+            $order = Order::where('trade_no', $tradeNo)->first();
+            
+            if (!$order) {
+                Log::error('UddoktaPay return order not found', [
+                    'trade_no' => $tradeNo,
+                    'invoice_id' => $invoiceId
+                ]);
+                return redirect('/#/order?error=order_not_found');
+            }
+
+            // Check if payment is completed
+            if ($paymentResult['status'] === 'COMPLETED') {
+                // Process payment if not already processed
+                if ($order->status === Order::STATUS_PENDING) {
+                    $this->processOrderPayment($order, $invoiceId, $paymentResult);
+                }
+                
+                // Redirect to order success page
+                Log::info('UddoktaPay return payment completed', [
+                    'trade_no' => $tradeNo,
+                    'invoice_id' => $invoiceId
+                ]);
+                
+                return redirect('/#/order/' . $tradeNo . '?status=success');
+            } else {
+                // Payment not completed yet
+                Log::info('UddoktaPay return payment pending', [
+                    'trade_no' => $tradeNo,
+                    'invoice_id' => $invoiceId,
+                    'status' => $paymentResult['status']
+                ]);
+                
+                return redirect('/#/order/' . $tradeNo . '?status=pending');
+            }
+
+        } catch (\Exception $e) {
+            Log::error('UddoktaPay return handler error', [
+                'error' => $e->getMessage(),
+                'invoice_id' => $request->get('invoice_id', 'unknown')
+            ]);
+            return redirect('/#/order?error=processing_failed');
+        }
+    }
+
+    /**
      * Handle UddoktaPay webhook notifications
      * This follows the official UddoktaPay webhook validation documentation
      * https://uddoktapay.readme.io/reference/validate-webhook

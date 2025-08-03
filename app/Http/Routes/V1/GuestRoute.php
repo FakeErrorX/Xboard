@@ -24,6 +24,7 @@ class GuestRoute
             // UddoktaPay
             $router->post('/uddoktapay/webhook', [UddoktaPayController::class, 'webhook']);
             $router->post('/uddoktapay/verify', [UddoktaPayController::class, 'verifyPayment']);
+            $router->get('/uddoktapay/return', [UddoktaPayController::class, 'handleReturn']);
             // UddoktaPay Standard Flow (alternative)
             $router->match(['get', 'post'], '/payment/notify/UddoktaPay/{uuid}', [PaymentController::class, 'notify']);
             // Comm

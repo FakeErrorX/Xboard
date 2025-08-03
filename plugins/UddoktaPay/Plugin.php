@@ -133,7 +133,7 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                     'order_type' => 'xboard_subscription',
                     'currency' => $currency
                 ],
-                'redirect_url' => $order['return_url'],
+                'redirect_url' => url('/api/v1/guest/uddoktapay/return'),
                 'cancel_url' => $order['return_url'] . '?status=cancelled',
                 'webhook_url' => $order['notify_url'],
                 'return_type' => 'GET'
