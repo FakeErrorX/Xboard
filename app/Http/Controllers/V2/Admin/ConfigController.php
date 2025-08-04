@@ -129,8 +129,8 @@ class ConfigController extends Controller
                 'try_out_plan_id' => (int) admin_setting('try_out_plan_id', 0),
                 'try_out_hour' => (int) admin_setting('try_out_hour', 1),
                 'tos_url' => admin_setting('tos_url'),
-                'currency' => admin_setting('currency', 'CNY'),
-                'currency_symbol' => admin_setting('currency_symbol', '¥'),
+                'currency' => admin_setting('currency', 'BDT'),
+                'currency_symbol' => admin_setting('currency_symbol', '৳'),
             ],
             'subscribe' => [
                 'plan_change_enable' => (bool) admin_setting('plan_change_enable', 1),
