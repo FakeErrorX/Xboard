@@ -402,7 +402,7 @@ window.XBOARD_TRANSLATIONS['en-US'] = {
         },
         "currencySymbol": {
           "label": "Currency Symbol",
-          "placeholder": "¥",
+          "placeholder": "৳",
           "description": "For display only, changing this will affect all currency symbols in the system."
         }
       }

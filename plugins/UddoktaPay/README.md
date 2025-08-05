@@ -8,7 +8,7 @@ A payment gateway plugin for Xboard that integrates with UddoktaPay payment auto
 - ✅ Payment verification using UddoktaPay Verify Payment API
 - ✅ **Webhook validation following official UddoktaPay documentation**
 - ✅ Sandbox mode support for testing
-- ✅ Multiple currency support
+- ✅ BDT and USD currency support
 - ✅ Comprehensive logging
 - ✅ Error handling and validation
 

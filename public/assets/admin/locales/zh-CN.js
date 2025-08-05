@@ -322,7 +322,7 @@ window.XBOARD_TRANSLATIONS['zh-CN'] = {
         },
         "currencySymbol": {
           "label": "货币符号",
-          "placeholder": "¥",
+          "placeholder": "৳",
           "description": "仅用于展示使用，更改后系统中所有的货币单位都将发生变更。"
         }
       }

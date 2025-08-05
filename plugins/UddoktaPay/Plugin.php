@@ -15,8 +15,8 @@ class Plugin extends AbstractPlugin implements PaymentInterface
         $this->filter('available_payment_methods', function ($methods) {
             if ($this->getConfig('enabled', true)) {
                 $methods['UddoktaPay'] = [
-                    'name' => $this->getConfig('display_name', 'UddoktaPay'),
-                    'icon' => $this->getConfig('icon', '💳'),
+                    'name' => 'UddoktaPay',
+                    'icon' => '💳',
                     'plugin_code' => $this->getPluginCode(),
                     'type' => 'plugin'
                 ];
@@ -28,16 +28,6 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     public function form(): array
     {
         return [
-            'display_name' => [
-                'label' => 'Display Name',
-                'type' => 'string',
-                'description' => 'Payment method name shown to users'
-            ],
-            'icon' => [
-                'label' => 'Icon',
-                'type' => 'string',
-                'description' => 'Icon displayed next to payment method'
-            ],
             'mode' => [
                 'label' => 'Payment Mode',
                 'type' => 'select',
@@ -62,17 +52,9 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                 'type' => 'select',
                 'options' => [
                     ['value' => 'BDT', 'label' => 'BDT - Bangladeshi Taka'],
-                    ['value' => 'USD', 'label' => 'USD - US Dollar'],
-                    ['value' => 'EUR', 'label' => 'EUR - Euro'],
-                    ['value' => 'GBP', 'label' => 'GBP - British Pound'],
-                    ['value' => 'INR', 'label' => 'INR - Indian Rupee'],
-                    ['value' => 'PKR', 'label' => 'PKR - Pakistani Rupee'],
-                    ['value' => 'AED', 'label' => 'AED - UAE Dirham'],
-                    ['value' => 'SAR', 'label' => 'SAR - Saudi Riyal'],
-                    ['value' => 'QAR', 'label' => 'QAR - Qatari Riyal'],
-                    ['value' => 'KWD', 'label' => 'KWD - Kuwaiti Dinar']
+                    ['value' => 'USD', 'label' => 'USD - US Dollar']
                 ],
-                'description' => 'Payment currency (BDT for Bangladeshi methods, others for global)'
+                'description' => 'Payment currency (BDT for Bangladeshi methods, USD for global)'
             ],
             'payment_type' => [
                 'label' => 'Payment Type',

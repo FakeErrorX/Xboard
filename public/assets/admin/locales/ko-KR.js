@@ -378,7 +378,7 @@ window.XBOARD_TRANSLATIONS['ko-KR'] = {
         },
         "currencySymbol": {
           "label": "통화 기호",
-          "placeholder": "¥",
+          "placeholder": "৳",
           "description": "표시용으로만 사용되며, 변경하면 시스템의 모든 통화 기호에 영향을 미칩니다."
         }
       }
