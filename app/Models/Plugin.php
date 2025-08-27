@@ -39,6 +39,7 @@ class Plugin extends Model
         'smogate',        // Smogate
         'telegram',       // Telegram
         'uddoktapay',     // UddoktaPay
+        'piprapay',       // PipraPay
     ];
 
     protected $guarded = [

@@ -1,0 +1,8 @@
+{
+    "name": "PipraPay",
+    "code": "piprapay",
+    "type": "payment",
+    "version": "1.0.0",
+    "description": "PipraPay payment automation plugin for Bangladesh",
+    "author": "XBoard Team"
+}
