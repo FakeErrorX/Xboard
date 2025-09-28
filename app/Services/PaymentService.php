@@ -100,7 +100,7 @@ class PaymentService
     }
 
     /**
-     * 获取所有可用的支付方式
+     * Get all available payment methods
      */
     public function getAvailablePaymentMethods(): array
     {
@@ -112,7 +112,7 @@ class PaymentService
     }
 
     /**
-     * 获取所有支付方式名称列表（用于管理后台）
+     * Get all payment method names list (for admin backend)
      */
     public static function getAllPaymentMethodNames(): array
     {

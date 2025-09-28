@@ -15,7 +15,7 @@ class ThemeService
     private const USER_THEME_DIR = '/storage/theme/';
     private const CONFIG_FILE = 'config.json';
     private const SETTING_PREFIX = 'theme_';
-    private const SYSTEM_THEMES = ['Xboard', 'v2board'];
+    private const SYSTEM_THEMES = ['Xboard'];
 
     public function __construct()
     {
@@ -57,13 +57,13 @@ class ThemeService
     {
         $themes = [];
 
-        // 获取系统主题
+        // Get system themes
         $systemPath = base_path(self::SYSTEM_THEME_DIR);
         if (File::exists($systemPath)) {
             $themes = $this->getThemesFromPath($systemPath, false);
         }
 
-        // 获取用户主题
+        // Get user themes
         $userPath = base_path(self::USER_THEME_DIR);
         if (File::exists($userPath)) {
             $themes = array_merge($themes, $this->getThemesFromPath($userPath, true));

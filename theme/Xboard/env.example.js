@@ -1,19 +1,19 @@
-// API地址
+// API Address
 window.routerBase = 'http://127.0.0.1:8000/'
 window.settings = {
-  // 站点名称
+  // Site Name
   title: 'Xboard',
-  // 站点描述
+  // Site Description
   description: 'Xboard',
   assets_path: '/assets',
-  // 主题色
+  // Theme Color
   theme: {
-    color: 'default', //可选default、blue、black、、darkblue
+    color: 'default', //Optional default, blue, black, darkblue
   },
-  // 版本号
+  // Version Number
   version: '0.1.1-dev',
-  // 登陆背景
+  // Login Background
   background_url: '',
-  // 站点LOGO
+  // Site LOGO
   logo: '',
 }

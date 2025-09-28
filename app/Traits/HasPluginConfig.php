@@ -8,17 +8,17 @@ use Illuminate\Support\Facades\Cache;
 trait HasPluginConfig
 {
     /**
-     * 缓存的插件配置
+     * Cached plugin configuration
      */
     protected ?array $pluginConfig = null;
 
     /**
-     * 插件代码
+     * Plugin code
      */
     protected ?string $pluginCode = null;
 
     /**
-     * 获取插件配置
+     * Get plugin configuration
      */
     public function getConfig(?string $key = null, $default = null): mixed
     {
@@ -32,14 +32,14 @@ trait HasPluginConfig
     }
 
     /**
-     * 获取完整的插件配置
+     * Get complete plugin configuration
      */
     protected function getPluginConfig(): array
     {
         if ($this->pluginConfig === null) {
             $pluginCode = $this->getPluginCode();
 
-            \Log::channel('daily')->info('Telegram Login: Getting plugin configuration', [
+            \Log::channel('daily')->info('Telegram Login: Get plugin configuration', [
                 'plugin_code' => $pluginCode
             ]);
 
@@ -64,7 +64,7 @@ trait HasPluginConfig
     }
 
     /**
-     * 获取插件代码
+     * Get plugin code
      */
     public function getPluginCode(): string
     {
@@ -76,24 +76,24 @@ trait HasPluginConfig
     }
 
     /**
-     * 设置插件代码（如果自动检测不准确可以手动设置）
+     * Set plugin code (can be set manually if auto-detection is inaccurate)
      */
     public function setPluginCode(string $pluginCode): void
     {
         $this->pluginCode = $pluginCode;
-        $this->pluginConfig = null; // 重置配置缓存
+        $this->pluginConfig = null; // Reset configuration cache
     }
 
     /**
-     * 自动检测插件代码
+     * Auto-detect plugin code
      */
     protected function autoDetectPluginCode(): string
     {
         $reflection = new \ReflectionClass($this);
         $namespace = $reflection->getNamespaceName();
         
-        // 从命名空间提取插件代码
-        // 例如: Plugin\TelegramLogin\Controllers => telegram_login
+        // Extract plugin code from namespace
+        // Example: Plugin\TelegramLogin\Controllers => telegram_login
         if (preg_match('/^Plugin\\\\(.+?)\\\\/', $namespace, $matches)) {
             return $this->convertToKebabCase($matches[1]);
         }
@@ -102,7 +102,7 @@ trait HasPluginConfig
     }
 
     /**
-     * 将 StudlyCase 转换为 kebab-case
+     * Convert StudlyCase to kebab-case
      */
     protected function convertToKebabCase(string $string): string
     {
@@ -110,7 +110,7 @@ trait HasPluginConfig
     }
 
     /**
-     * 检查插件是否启用
+     * Check if plugin is enabled
      */
     public function isPluginEnabled(): bool
     {
@@ -118,7 +118,7 @@ trait HasPluginConfig
     }
 
     /**
-     * 清除插件配置缓存
+     * Clear plugin configuration cache
      */
     public function clearConfigCache(): void
     {

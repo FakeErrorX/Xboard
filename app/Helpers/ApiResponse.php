@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 trait ApiResponse
 {
     /**
-     * 成功
+     * Success
      * @param mixed $data
      * @param array $codeResponse
      * @return JsonResponse
@@ -22,7 +22,7 @@ trait ApiResponse
     }
 
     /**
-     * 失败
+     * Fail
      * @param array $codeResponse
      * @param mixed $data
      * @param mixed $error
@@ -34,7 +34,7 @@ trait ApiResponse
     }
 
     /**
-     * json响应
+     * JSON response
      * @param $status
      * @param $codeResponse
      * @param $data
@@ -67,7 +67,7 @@ trait ApiResponse
     }
 
     /**
-     * 业务异常返回
+     * Business exception return
      * @param array $codeResponse
      * @param string $info
      * @throws BusinessException

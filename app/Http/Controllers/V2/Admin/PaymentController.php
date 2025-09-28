@@ -43,7 +43,7 @@ class PaymentController extends Controller
             $paymentService = new PaymentService($request->input('payment'), $request->input('id'));
             return $this->success(collect($paymentService->form()));
         } catch (\Exception $e) {
-            return $this->fail([400, '支付方式不存在或未启用']);
+            return $this->fail([400, 'Payment method does not exist or is not enabled']);
         }
     }
 
@@ -51,17 +51,17 @@ class PaymentController extends Controller
     {
         $payment = Payment::find($request->input('id'));
         if (!$payment)
-            return $this->fail([400202, '支付方式不存在']);
+            return $this->fail([400202, 'Payment method does not exist']);
         $payment->enable = !$payment->enable;
         if (!$payment->save())
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         return $this->success(true);
     }
 
     public function save(Request $request)
     {
         if (!admin_setting('app_url')) {
-            return $this->fail([400, '请在站点配置中配置站点地址']);
+            return $this->fail([400, 'Please configure site address in site configuration']);
         }
         $params = $request->validate([
             'name' => 'required',
@@ -72,28 +72,28 @@ class PaymentController extends Controller
             'handling_fee_fixed' => 'nullable|integer',
             'handling_fee_percent' => 'nullable|numeric|between:0,100'
         ], [
-            'name.required' => '显示名称不能为空',
-            'payment.required' => '网关参数不能为空',
-            'config.required' => '配置参数不能为空',
-            'notify_domain.url' => '自定义通知域名格式有误',
-            'handling_fee_fixed.integer' => '固定手续费格式有误',
-            'handling_fee_percent.between' => '百分比手续费范围须在0-100之间'
+            'name.required' => 'Display name cannot be empty',
+            'payment.required' => 'Gateway parameter cannot be empty',
+            'config.required' => 'Configuration parameter cannot be empty',
+            'notify_domain.url' => 'Custom notification domain format is incorrect',
+            'handling_fee_fixed.integer' => 'Fixed handling fee format is incorrect',
+            'handling_fee_percent.between' => 'Percentage handling fee range must be between 0-100'
         ]);
         if ($request->input('id')) {
             $payment = Payment::find($request->input('id'));
             if (!$payment)
-                return $this->fail([400202, '支付方式不存在']);
+                return $this->fail([400202, 'Payment method does not exist']);
             try {
                 $payment->update($params);
             } catch (\Exception $e) {
                 Log::error($e);
-                return $this->fail([500, '保存失败']);
+                return $this->fail([500, 'Save failed']);
             }
             return $this->success(true);
         }
         $params['uuid'] = Helper::randomChar(8);
         if (!Payment::create($params)) {
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         }
         return $this->success(true);
     }
@@ -102,7 +102,7 @@ class PaymentController extends Controller
     {
         $payment = Payment::find($request->input('id'));
         if (!$payment)
-            return $this->fail([400202, '支付方式不存在']);
+            return $this->fail([400202, 'Payment method does not exist']);
         return $this->success($payment->delete());
     }
 
@@ -112,8 +112,8 @@ class PaymentController extends Controller
         $request->validate([
             'ids' => 'required|array'
         ], [
-            'ids.required' => '参数有误',
-            'ids.array' => '参数有误'
+            'ids.required' => 'Invalid parameters',
+            'ids.array' => 'Invalid parameters'
         ]);
         try {
             DB::beginTransaction();
@@ -125,7 +125,7 @@ class PaymentController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         }
 
         return $this->success(true);

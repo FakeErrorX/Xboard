@@ -8,7 +8,7 @@ class OriginV2bMigrationsTableSeeder extends Seeder
 {
 
     /**
-     * 原版V2b数据库迁移初始化
+     * Original V2b database migration initialization
      *
      * @return void
      */

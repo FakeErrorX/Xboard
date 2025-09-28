@@ -43,7 +43,7 @@ class ManageController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
 
         }
         return $this->success(true);
@@ -55,14 +55,14 @@ class ManageController extends Controller
         if ($request->input('id')) {
             $server = Server::find($request->input('id'));
             if (!$server) {
-                return $this->fail([400202, '服务器不存在']);
+                return $this->fail([400202, 'Server does not exist']);
             }
             try {
                 $server->update($params);
                 return $this->success(true);
             } catch (\Exception $e) {
                 Log::error($e);
-                return $this->fail([500, '保存失败']);
+                return $this->fail([500, 'Save failed']);
             }
         }
 
@@ -71,7 +71,7 @@ class ManageController extends Controller
             return $this->success(true);
         } catch (\Exception $e) {
             Log::error($e);
-            return $this->fail([500, '创建失败']);
+            return $this->fail([500, 'Create failed']);
         }
 
 
@@ -85,13 +85,13 @@ class ManageController extends Controller
         ]);
 
         if (!Server::where('id', $request->id)->update(['show' => $request->show])) {
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         }
         return $this->success(true);
     }
 
     /**
-     * 删除
+     * Delete
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -101,14 +101,14 @@ class ManageController extends Controller
             'id' => 'required|integer',
         ]);
         if (Server::where('id', $request->id)->delete() === false) {
-            return $this->fail([500, '删除失败']);
+            return $this->fail([500, 'Delete failed']);
         }
         return $this->success(true);
     }
 
 
     /**
-     * 复制节点
+     * Copy node
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -118,7 +118,7 @@ class ManageController extends Controller
         $server->show = 0;
         $server->code = null;
         if (!$server) {
-            return $this->fail([400202, '服务器不存在']);
+            return $this->fail([400202, 'Server does not exist']);
         }
         Server::create($server->toArray());
         return $this->success(true);

@@ -53,7 +53,7 @@ class TicketController extends Controller
         $ticket = Ticket::with('messages', 'user')->find($request->input('id'));
 
         if (!$ticket) {
-            return $this->fail([400202, '工单不存在']);
+            return $this->fail([400202, 'Ticket does not exist']);
         }
         $result = $ticket->toArray();
         $result['user'] = UserController::transformUserData($ticket->user);
@@ -89,7 +89,7 @@ class TicketController extends Controller
                 page: $request->integer('current', 1)
             );
 
-        // 获取items然后映射转换
+        // Get items then map and transform
         $items = collect($tickets->items())->map(function ($ticket) {
             $ticketData = $ticket->toArray();
             $ticketData['user'] = UserController::transformUserData($ticket->user);
@@ -108,8 +108,8 @@ class TicketController extends Controller
             'id' => 'required|numeric',
             'message' => 'required|string'
         ], [
-            'id.required' => '工单ID不能为空',
-            'message.required' => '消息不能为空'
+            'id.required' => 'Ticket ID cannot be empty',
+            'message.required' => 'Message cannot be empty'
         ]);
         $ticketService = new TicketService();
         $ticketService->replyByAdmin(
@@ -125,7 +125,7 @@ class TicketController extends Controller
         $request->validate([
             'id' => 'required|numeric'
         ], [
-            'id.required' => '工单ID不能为空'
+            'id.required' => 'Ticket ID cannot be empty'
         ]);
         try {
             $ticket = Ticket::findOrFail($request->input('id'));
@@ -133,9 +133,9 @@ class TicketController extends Controller
             $ticket->save();
             return $this->success(true);
         } catch (ModelNotFoundException $e) {
-            return $this->fail([400202, '工单不存在']);
+            return $this->fail([400202, 'Ticket does not exist']);
         } catch (\Exception $e) {
-            return $this->fail([500101, '关闭失败']);
+            return $this->fail([500101, 'Close failed']);
         }
     }
 
@@ -144,11 +144,11 @@ class TicketController extends Controller
         $ticket = Ticket::with([
             'user',
             'messages' => function ($query) {
-                $query->with(['user']); // 如果需要用户信息
+                $query->with(['user']); // If user information is needed
             }
         ])->findOrFail($ticketId);
 
-        // 自动包含 is_me 属性
+        // Automatically include is_me attribute
         return response()->json([
             'data' => $ticket
         ]);

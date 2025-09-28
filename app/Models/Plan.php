@@ -13,25 +13,25 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * App\Models\Plan
  *
  * @property int $id
- * @property string $name 套餐名称
- * @property int|null $group_id 权限组ID
- * @property int $transfer_enable 流量(KB)
- * @property int|null $speed_limit 速度限制Mbps
- * @property bool $show 是否显示
- * @property bool $renew 是否允许续费
- * @property bool $sell 是否允许购买
- * @property array|null $prices 价格配置
- * @property array|null $tags 标签
- * @property int $sort 排序
- * @property string|null $content 套餐描述
- * @property int|null $reset_traffic_method 流量重置方式
- * @property int|null $capacity_limit 订阅人数限制
- * @property int|null $device_limit 设备数量限制
+ * @property string $name Plan name
+ * @property int|null $group_id Permission group ID
+ * @property int $transfer_enable Traffic limit (KB)
+ * @property int|null $speed_limit Speed limit Mbps
+ * @property bool $show Whether to show
+ * @property bool $renew Whether to allow renewal
+ * @property bool $sell Whether to allow purchase
+ * @property array|null $prices Price configuration
+ * @property array|null $tags Tags
+ * @property int $sort Sort order
+ * @property string|null $content Plan description
+ * @property int|null $reset_traffic_method Traffic reset method
+ * @property int|null $capacity_limit Subscription capacity limit
+ * @property int|null $device_limit Device limit
  * @property int $created_at
  * @property int $updated_at
  * 
- * @property-read ServerGroup|null $group 关联的权限组
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Order> $order 关联的订单
+ * @property-read ServerGroup|null $group Associated permission group
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Order> $order Associated orders
  */
 class Plan extends Model
 {
@@ -40,18 +40,18 @@ class Plan extends Model
     protected $table = 'v2_plan';
     protected $dateFormat = 'U';
 
-    // 定义流量重置方式
-    public const RESET_TRAFFIC_FOLLOW_SYSTEM = null;    // 跟随系统设置
-    public const RESET_TRAFFIC_FIRST_DAY_MONTH = 0;  // 每月1号
-    public const RESET_TRAFFIC_MONTHLY = 1;          // 按月重置
-    public const RESET_TRAFFIC_NEVER = 2;            // 不重置
-    public const RESET_TRAFFIC_FIRST_DAY_YEAR = 3;   // 每年1月1日
-    public const RESET_TRAFFIC_YEARLY = 4;           // 按年重置
+    // Define traffic reset methods
+    public const RESET_TRAFFIC_FOLLOW_SYSTEM = null;    // Follow system settings
+    public const RESET_TRAFFIC_FIRST_DAY_MONTH = 0;  // 1st of each month
+    public const RESET_TRAFFIC_MONTHLY = 1;          // Monthly reset
+    public const RESET_TRAFFIC_NEVER = 2;            // No reset
+    public const RESET_TRAFFIC_FIRST_DAY_YEAR = 3;   // January 1st each year
+    public const RESET_TRAFFIC_YEARLY = 4;           // Yearly reset
 
-    // 定义价格类型
-    public const PRICE_TYPE_RESET_TRAFFIC = 'reset_traffic';  // 重置流量价格
+    // Define price types
+    public const PRICE_TYPE_RESET_TRAFFIC = 'reset_traffic';  // Reset traffic price
 
-    // 定义可用的订阅周期
+    // Define available subscription periods
     public const PERIOD_MONTHLY = 'monthly';
     public const PERIOD_QUARTERLY = 'quarterly';
     public const PERIOD_HALF_YEARLY = 'half_yearly';
@@ -61,7 +61,7 @@ class Plan extends Model
     public const PERIOD_ONETIME = 'onetime';
     public const PERIOD_RESET_TRAFFIC = 'reset_traffic';
 
-    // 定义旧版周期映射
+    // Define legacy period mapping
     public const LEGACY_PERIOD_MAPPING = [
         'month_price' => self::PERIOD_MONTHLY,
         'quarter_price' => self::PERIOD_QUARTERLY,
@@ -102,24 +102,24 @@ class Plan extends Model
     ];
 
     /**
-     * 获取所有可用的流量重置方式
+     * Get all available traffic reset methods
      *
      * @return array
      */
     public static function getResetTrafficMethods(): array
     {
         return [
-            self::RESET_TRAFFIC_FOLLOW_SYSTEM => '跟随系统设置',
-            self::RESET_TRAFFIC_FIRST_DAY_MONTH => '每月1号',
-            self::RESET_TRAFFIC_MONTHLY => '按月重置',
-            self::RESET_TRAFFIC_NEVER => '不重置',
-            self::RESET_TRAFFIC_FIRST_DAY_YEAR => '每年1月1日',
-            self::RESET_TRAFFIC_YEARLY => '按年重置',
+            self::RESET_TRAFFIC_FOLLOW_SYSTEM => 'Follow system settings',
+            self::RESET_TRAFFIC_FIRST_DAY_MONTH => '1st of each month',
+            self::RESET_TRAFFIC_MONTHLY => 'Monthly reset',
+            self::RESET_TRAFFIC_NEVER => 'No reset',
+            self::RESET_TRAFFIC_FIRST_DAY_YEAR => 'January 1st each year',
+            self::RESET_TRAFFIC_YEARLY => 'Yearly reset',
         ];
     }
 
     /**
-     * 获取所有可用的订阅周期
+     * Get all available subscription periods
      *
      * @return array
      */
@@ -127,42 +127,42 @@ class Plan extends Model
     {
         return [
             self::PERIOD_MONTHLY => [
-                'name' => '月付',
+                'name' => 'Monthly',
                 'days' => 30,
                 'value' => 1
             ],
             self::PERIOD_QUARTERLY => [
-                'name' => '季付',
+                'name' => 'Quarterly',
                 'days' => 90,
                 'value' => 3
             ],
             self::PERIOD_HALF_YEARLY => [
-                'name' => '半年付',
+                'name' => 'Half-yearly',
                 'days' => 180,
                 'value' => 6
             ],
             self::PERIOD_YEARLY => [
-                'name' => '年付',
+                'name' => 'Yearly',
                 'days' => 365,
                 'value' => 12
             ],
             self::PERIOD_TWO_YEARLY => [
-                'name' => '两年付',
+                'name' => 'Two years',
                 'days' => 730,
                 'value' => 24
             ],
             self::PERIOD_THREE_YEARLY => [
-                'name' => '三年付',
+                'name' => 'Three years',
                 'days' => 1095,
                 'value' => 36
             ],
             self::PERIOD_ONETIME => [
-                'name' => '一次性',
+                'name' => 'One-time',
                 'days' => -1,
                 'value' => -1
             ],
             self::PERIOD_RESET_TRAFFIC => [
-                'name' => '重置流量',
+                'name' => 'Reset traffic',
                 'days' => -1,
                 'value' => -1
             ],
@@ -170,7 +170,7 @@ class Plan extends Model
     }
 
     /**
-     * 获取指定周期的价格
+     * Get price for specific period
      *
      * @param string $period
      * @return int|null
@@ -181,7 +181,7 @@ class Plan extends Model
     }
 
     /**
-     * 获取所有已设置价格的周期
+     * Get all periods with set prices
      *
      * @return array
      */
@@ -196,7 +196,7 @@ class Plan extends Model
     }
 
     /**
-     * 设置指定周期的价格
+     * Set price for specific period
      *
      * @param string $period
      * @param int $price
@@ -215,7 +215,7 @@ class Plan extends Model
     }
 
     /**
-     * 移除指定周期的价格
+     * Remove price for specific period
      *
      * @param string $period
      * @return void
@@ -228,7 +228,7 @@ class Plan extends Model
     }
 
     /**
-     * 获取所有价格及其对应的周期信息
+     * Get all prices with their corresponding period information
      *
      * @return array
      */
@@ -254,7 +254,7 @@ class Plan extends Model
     }
 
     /**
-     * 检查是否可以重置流量
+     * Check if traffic can be reset
      *
      * @return bool
      */
@@ -265,7 +265,7 @@ class Plan extends Model
     }
 
     /**
-     * 获取重置流量的价格
+     * Get reset traffic price
      *
      * @return int
      */
@@ -275,10 +275,10 @@ class Plan extends Model
     }
 
     /**
-     * 计算指定周期的有效天数
+     * Calculate effective days for specific period
      *
      * @param string $period
-     * @return int -1表示永久有效
+     * @return int -1 means permanently valid
      * @throws InvalidArgumentException
      */
     public static function getPeriodDays(string $period): int
@@ -292,7 +292,7 @@ class Plan extends Model
     }
 
     /**
-     * 检查周期是否有效
+     * Check if period is valid
      *
      * @param string $period
      * @return bool
@@ -318,7 +318,7 @@ class Plan extends Model
     }
 
     /**
-     * 设置流量重置方式
+     * Set traffic reset method
      *
      * @param int $method
      * @return void
@@ -334,7 +334,7 @@ class Plan extends Model
     }
 
     /**
-     * 设置重置流量价格
+     * Set reset traffic price
      *
      * @param int $price
      * @return void

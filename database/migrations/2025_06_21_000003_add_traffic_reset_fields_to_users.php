@@ -15,9 +15,9 @@ class AddTrafficResetFieldsToUsers extends Migration
         ini_set('memory_limit', '-1');
         if (!Schema::hasColumn('v2_user', 'next_reset_at')) {
             Schema::table('v2_user', function (Blueprint $table) {
-                $table->integer('next_reset_at')->nullable()->after('expired_at')->comment('下次流量重置时间');
-                $table->integer('last_reset_at')->nullable()->after('next_reset_at')->comment('上次流量重置时间');
-                $table->integer('reset_count')->default(0)->after('last_reset_at')->comment('流量重置次数');
+                $table->integer('next_reset_at')->nullable()->after('expired_at')->comment('Next traffic reset time');
+                $table->integer('last_reset_at')->nullable()->after('next_reset_at')->comment('Last traffic reset time');
+                $table->integer('reset_count')->default(0)->after('last_reset_at')->comment('Traffic reset count');
                 $table->index('next_reset_at', 'idx_next_reset_at');
             });
         }

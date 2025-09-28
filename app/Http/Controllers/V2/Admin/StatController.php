@@ -23,31 +23,31 @@ class StatController extends Controller
     }
     public function getOverride(Request $request)
     {
-        // 获取在线节点数
+        // Get online node count
         $onlineNodes = Server::all()->filter(function ($server) {
             return !!$server->is_online;
         })->count();
-        // 获取在线设备数和在线用户数
+        // Get online device count and online user count
         $onlineDevices = User::where('t', '>=', time() - 600)
             ->sum('online_count');
         $onlineUsers = User::where('t', '>=', time() - 600)
             ->count();
 
-        // 获取今日流量统计
+        // Get today's traffic statistics
         $todayStart = strtotime('today');
         $todayTraffic = StatServer::where('record_at', '>=', $todayStart)
             ->where('record_at', '<', time())
             ->selectRaw('SUM(u) as upload, SUM(d) as download, SUM(u + d) as total')
             ->first();
 
-        // 获取本月流量统计
+        // Get monthly traffic statistics
         $monthStart = strtotime(date('Y-m-1'));
         $monthTraffic = StatServer::where('record_at', '>=', $monthStart)
             ->where('record_at', '<', time())
             ->selectRaw('SUM(u) as upload, SUM(d) as download, SUM(u + d) as total')
             ->first();
 
-        // 获取总流量统计
+        // Get total traffic statistics
         $totalTraffic = StatServer::selectRaw('SUM(u) as upload, SUM(d) as download, SUM(u + d) as total')
             ->first();
 
@@ -81,7 +81,7 @@ class StatController extends Controller
                 'commission_last_month_payout' => CommissionLog::where('created_at', '>=', strtotime('-1 month', strtotime(date('Y-m-1'))))
                     ->where('created_at', '<', strtotime(date('Y-m-1')))
                     ->sum('get_amount'),
-                // 新增统计数据
+                // Additional statistics data
                 'online_nodes' => $onlineNodes,
                 'online_devices' => $onlineDevices,
                 'online_users' => $onlineUsers,
@@ -206,21 +206,21 @@ class StatController extends Controller
     private function getTypeLabel(string $type): string
     {
         return match ($type) {
-            'paid_total' => '收款金额',
-            'paid_count' => '收款笔数',
-            'commission_total' => '佣金金额(已发放)',
-            'commission_count' => '佣金笔数(已发放)',
+            'paid_total' => 'Payment Amount',
+            'paid_count' => 'Payment Count',
+            'commission_total' => 'Commission Amount (Paid)',
+            'commission_count' => 'Commission Count (Paid)',
             default => $type
         };
     }
 
-    // 获取当日实时流量排行
+    // Get real-time traffic ranking for today
     public function getServerLastRank()
     {
         $data = $this->service->getServerRank();
         return $this->success(data: $data);
     }
-    // 获取昨日节点流量排行
+    // Get yesterday's node traffic ranking
     public function getServerYesterdayRank()
     {
         $data = $this->service->getServerRank('yesterday');
@@ -265,30 +265,30 @@ class StatController extends Controller
         $todayStart = strtotime('today');
         $yesterdayStart = strtotime('-1 day', $todayStart);
 
-        // 获取在线节点数
+        // Get online node count
         $onlineNodes = Server::all()->filter(function ($server) {
             return !!$server->is_online;
         })->count();
 
-        // 获取在线设备数和在线用户数
+        // Get online device count and online user count
         $onlineDevices = User::where('t', '>=', time() - 600)
             ->sum('online_count');
         $onlineUsers = User::where('t', '>=', time() - 600)
             ->count();
 
-        // 获取今日流量统计
+        // Get today's traffic statistics
         $todayTraffic = StatServer::where('record_at', '>=', $todayStart)
             ->where('record_at', '<', time())
             ->selectRaw('SUM(u) as upload, SUM(d) as download, SUM(u + d) as total')
             ->first();
 
-        // 获取本月流量统计
+        // Get this month's traffic statistics
         $monthTraffic = StatServer::where('record_at', '>=', $currentMonthStart)
             ->where('record_at', '<', time())
             ->selectRaw('SUM(u) as upload, SUM(d) as download, SUM(u + d) as total')
             ->first();
 
-        // 获取总流量统计
+        // Get total traffic statistics
         $totalTraffic = StatServer::selectRaw('SUM(u) as upload, SUM(d) as download, SUM(u + d) as total')
             ->first();
 
@@ -363,7 +363,7 @@ class StatController extends Controller
         $userGrowth = $lastMonthNewUsers > 0 ? round(($currentMonthNewUsers - $lastMonthNewUsers) / $lastMonthNewUsers * 100, 1) : 0;
         $dayIncomeGrowth = $yesterdayIncome > 0 ? round(($todayIncome - $yesterdayIncome) / $yesterdayIncome * 100, 1) : 0;
 
-        // 获取待处理工单和佣金数据
+        // Get pending ticket and commission data
         $ticketPendingTotal = Ticket::where('status', 0)->count();
         $commissionPendingTotal = Order::where('commission_status', 0)
             ->where('invite_user_id', '!=', NULL)
@@ -373,7 +373,7 @@ class StatController extends Controller
 
         return [
             'data' => [
-                // 收入相关
+                // Income related
                 'todayIncome' => $todayIncome,
                 'dayIncomeGrowth' => $dayIncomeGrowth,
                 'currentMonthIncome' => $currentMonthIncome,
@@ -381,13 +381,13 @@ class StatController extends Controller
                 'monthIncomeGrowth' => $monthIncomeGrowth,
                 'lastMonthIncomeGrowth' => $lastMonthIncomeGrowth,
 
-                // 佣金相关
+                // Commission related
                 'currentMonthCommissionPayout' => $currentMonthCommissionPayout,
                 'lastMonthCommissionPayout' => $lastMonthCommissionPayout,
                 'commissionGrowth' => $commissionGrowth,
                 'commissionPendingTotal' => $commissionPendingTotal,
 
-                // 用户相关
+                // User related
                 'currentMonthNewUsers' => $currentMonthNewUsers,
                 'totalUsers' => $totalUsers,
                 'activeUsers' => $activeUsers,
@@ -395,13 +395,13 @@ class StatController extends Controller
                 'onlineUsers' => $onlineUsers,
                 'onlineDevices' => $onlineDevices,
 
-                // 工单相关
+                // Ticket related
                 'ticketPendingTotal' => $ticketPendingTotal,
 
-                // 节点相关
+                // Node related
                 'onlineNodes' => $onlineNodes,
 
-                // 流量统计
+                // Traffic statistics
                 'todayTraffic' => [
                     'upload' => $todayTraffic->upload ?? 0,
                     'download' => $todayTraffic->download ?? 0,

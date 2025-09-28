@@ -13,7 +13,6 @@
 - PHP: 8.2
 - MySQL: 5.7
 - Redis: 7.0
-- Docker: Latest stable version
 
 ## Test Scenarios
 

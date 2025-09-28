@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 class GiftCardController extends Controller
 {
     /**
-     * 查询兑换码信息
+     * Query redemption code information
      */
     public function check(GiftCardCheckRequest $request)
     {
@@ -22,38 +22,38 @@ class GiftCardController extends Controller
             $giftCardService = new GiftCardService($request->input('code'));
             $giftCardService->setUser($request->user());
 
-            // 1. 验证礼品卡本身是否有效 (如不存在、已过期、已禁用)
+            // 1. Validate if the gift card itself is valid (e.g., does not exist, expired, disabled)
             $giftCardService->validateIsActive();
 
-            // 2. 检查用户是否满足使用条件，但不在此处抛出异常
+            // 2. Check if the user meets usage conditions, but don't throw exception here
             $eligibility = $giftCardService->checkUserEligibility();
 
-            // 3. 获取卡片信息和奖励预览
+            // 3. Get card information and reward preview
             $codeInfo = $giftCardService->getCodeInfo();
             $rewardPreview = $giftCardService->previewRewards();
 
             return $this->success([
-                'code_info' => $codeInfo, // 这里面已经包含 plan_info
+                'code_info' => $codeInfo, // Already includes plan_info
                 'reward_preview' => $rewardPreview,
                 'can_redeem' => $eligibility['can_redeem'],
                 'reason' => $eligibility['reason'],
             ]);
 
         } catch (ApiException $e) {
-            // 这里只捕获 validateIsActive 抛出的异常
+            // Only catch exceptions thrown by validateIsActive
             return $this->fail([400, $e->getMessage()]);
         } catch (\Exception $e) {
-            Log::error('礼品卡查询失败', [
+            Log::error('Gift card query failed', [
                 'code' => $request->input('code'),
                 'user_id' => $request->user()->id,
                 'error' => $e->getMessage(),
             ]);
-            return $this->fail([500, '查询失败，请稍后重试']);
+            return $this->fail([500, 'Query failed, please try again later']);
         }
     }
 
     /**
-     * 使用兑换码
+     * Use redemption code
      */
     public function redeem(GiftCardRedeemRequest $request)
     {
@@ -62,20 +62,20 @@ class GiftCardController extends Controller
             $giftCardService->setUser($request->user());
             $giftCardService->validate();
 
-            // 使用礼品卡
+            // Use gift card
             $result = $giftCardService->redeem([
                 // 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
 
-            Log::info('礼品卡使用成功', [
+            Log::info('Gift card used successfully', [
                 'code' => $request->input('code'),
                 'user_id' => $request->user()->id,
                 'rewards' => $result['rewards'],
             ]);
 
             return $this->success([
-                'message' => '兑换成功！',
+                'message' => 'Redemption successful!',
                 'rewards' => $result['rewards'],
                 'invite_rewards' => $result['invite_rewards'],
                 'template_name' => $result['template_name'],
@@ -84,18 +84,18 @@ class GiftCardController extends Controller
         } catch (ApiException $e) {
             return $this->fail([400, $e->getMessage()]);
         } catch (\Exception $e) {
-            Log::error('礼品卡使用失败', [
+            Log::error('Gift card usage failed', [
                 'code' => $request->input('code'),
                 'user_id' => $request->user()->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return $this->fail([500, '兑换失败，请稍后重试']);
+            return $this->fail([500, 'Redemption failed, please try again later']);
         }
     }
 
     /**
-     * 获取用户兑换记录
+     * Get user redemption records
      */
     public function history(Request $request)
     {
@@ -138,7 +138,7 @@ class GiftCardController extends Controller
     }
 
     /**
-     * 获取兑换记录详情
+     * Get redemption record details
      */
     public function detail(Request $request)
     {
@@ -152,7 +152,7 @@ class GiftCardController extends Controller
             ->first();
 
         if (!$usage) {
-            return $this->fail([404, '记录不存在']);
+            return $this->fail([404, 'Record does not exist']);
         }
 
         return $this->success([
@@ -182,7 +182,7 @@ class GiftCardController extends Controller
     }
 
     /**
-     * 获取可用的礼品卡类型
+     * Get available gift card types
      */
     public function types(Request $request)
     {

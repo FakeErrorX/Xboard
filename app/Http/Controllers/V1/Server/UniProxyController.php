@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\V1\Server;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\UpdateAliveDataJob;
 use App\Services\ServerService;
 use App\Services\UserService;
 use App\Utils\CacheKey;
@@ -20,14 +21,14 @@ class UniProxyController extends Controller
     }
 
     /**
-     * 获取当前请求的节点信息
+     * Get current request node information
      */
     private function getNodeInfo(Request $request)
     {
         return $request->attributes->get('node_info');
     }
 
-    // 后端获取用户
+    // Backend get users
     public function user(Request $request)
     {
         ini_set('memory_limit', -1);
@@ -35,7 +36,7 @@ class UniProxyController extends Controller
         $nodeType = $node->type;
         $nodeId = $node->id;
         Cache::put(CacheKey::get('SERVER_' . strtoupper($nodeType) . '_LAST_CHECK_AT', $nodeId), time(), 3600);
-        $users = ServerService::getAvailableUsers($node->group_ids);
+        $users = ServerService::getAvailableUsers($node);
 
         $response['users'] = $users;
 
@@ -47,7 +48,7 @@ class UniProxyController extends Controller
         return response($response)->header('ETag', "\"{$eTag}\"");
     }
 
-    // 后端提交数据
+    // Backend submit data
     public function push(Request $request)
     {
         $res = json_decode(request()->getContent(), true);
@@ -83,7 +84,7 @@ class UniProxyController extends Controller
         return $this->success(true);
     }
 
-    // 后端获取配置
+    // Backend get configuration
     public function config(Request $request)
     {
         $node = $this->getNodeInfo($request);
@@ -196,17 +197,17 @@ class UniProxyController extends Controller
         return response($response)->header('ETag', "\"{$eTag}\"");
     }
 
-    // 获取在线用户数据（wyx2685
+    // Get online user data (wyx2685
     public function alivelist(Request $request): JsonResponse
     {
         $node = $this->getNodeInfo($request);
-        $deviceLimitUsers = ServerService::getAvailableUsers($node->group_ids)
+        $deviceLimitUsers = ServerService::getAvailableUsers($node)
             ->where('device_limit', '>', 0);
         $alive = $this->userOnlineService->getAliveList($deviceLimitUsers);
         return response()->json(['alive' => (object) $alive]);
     }
 
-    // 后端提交在线数据
+    // Backend submit online data
     public function alive(Request $request): JsonResponse
     {
         $node = $this->getNodeInfo($request);
@@ -216,11 +217,11 @@ class UniProxyController extends Controller
                 'error' => 'Invalid online data'
             ], 400);
         }
-        $this->userOnlineService->updateAliveData($data, $node->type, $node->id);
+        UpdateAliveDataJob::dispatch($data, $node->type, $node->id);
         return response()->json(['data' => true]);
     }
 
-    // 提交节点负载状态
+    // Submit server load status
     public function status(Request $request): JsonResponse
     {
         $node = $this->getNodeInfo($request);

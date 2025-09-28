@@ -7,7 +7,7 @@ use Illuminate\Contracts\Database\Query\Expression;
 trait QueryOperators
 {
     /**
-     * 获取查询运算符映射
+     * Get query operator mapping
      *
      * @param string $operator
      * @return string
@@ -29,7 +29,7 @@ trait QueryOperators
     }
 
     /**
-     * 获取查询值格式化
+     * Get formatted query value
      *
      * @param string $operator
      * @param mixed $value
@@ -45,7 +45,7 @@ trait QueryOperators
     }
 
     /**
-     * 应用查询条件
+     * Apply query conditions
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string $field

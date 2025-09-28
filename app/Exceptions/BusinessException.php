@@ -7,9 +7,9 @@ use Exception;
 class BusinessException extends Exception
 {
     /**
-     * 业务异常构造函数
-     * @param array $codeResponse 状态码
-     * @param string $info 自定义返回信息，不为空时会替换掉codeResponse 里面的message文字信息
+     * Business exception constructor
+     * @param array $codeResponse Status code
+     * @param string $info Custom return information, when not empty it will replace the message text information in codeResponse
      */
     public function __construct(array $codeResponse, $info = '')
     {

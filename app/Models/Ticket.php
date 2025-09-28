@@ -10,17 +10,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * App\Models\Ticket
  *
  * @property int $id
- * @property int $user_id 用户ID
- * @property string $subject 工单主题
- * @property string|null $level 工单等级
- * @property int $status 工单状态
- * @property int|null $reply_status 回复状态
- * @property int|null $last_reply_user_id 最后回复人
+ * @property int $user_id User ID
+ * @property string $subject Ticket subject
+ * @property string|null $level Ticket level
+ * @property int $status Ticket status
+ * @property int|null $reply_status Reply status
+ * @property int|null $last_reply_user_id Last replier
  * @property int $created_at
  * @property int $updated_at
  * 
- * @property-read User $user 关联的用户
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketMessage> $messages 关联的工单消息
+ * @property-read User $user Associated user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, TicketMessage> $messages Associated ticket messages
  */
 class Ticket extends Model
 {
@@ -35,8 +35,8 @@ class Ticket extends Model
     const STATUS_OPENING = 0;
     const STATUS_CLOSED = 1;
     public static $statusMap = [
-        self::STATUS_OPENING => '开启',
-        self::STATUS_CLOSED => '关闭'
+        self::STATUS_OPENING => 'Open',
+        self::STATUS_CLOSED => 'Closed'
     ];
 
     public function user(): BelongsTo
@@ -45,14 +45,14 @@ class Ticket extends Model
     }
     
     /**
-     * 关联的工单消息
+     * Associated ticket messages
      */
     public function messages(): HasMany
     {
         return $this->hasMany(TicketMessage::class, 'ticket_id', 'id');
     }
     
-    // 即将删除
+    // To be deleted
     public function message(): HasMany
     {
         return $this->hasMany(TicketMessage::class, 'ticket_id', 'id');

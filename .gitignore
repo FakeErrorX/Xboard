@@ -1,5 +1,4 @@
 /node_modules
-/config/v2board.php
 /config/googleCloudStorageKey.json
 /public/hot
 /public/storage

@@ -13,7 +13,7 @@ class ServerService
 {
 
     /**
-     * 获取所有服务器列表
+     * Get all servers list
      * @return Collection
      */
     public static function getAllServers(): Collection
@@ -32,7 +32,7 @@ class ServerService
     }
 
     /**
-     * 获取指定用户可用的服务器列表
+     * Get available servers list for specified user
      * @param User $user
      * @return array
      */
@@ -45,7 +45,7 @@ class ServerService
             ->append(['last_check_at', 'last_push_at', 'online', 'is_online', 'available_status', 'cache_key', 'server_key']);
 
         $servers = collect($servers)->map(function ($server) use ($user) {
-            // 判断动态端口
+            // Determine dynamic port
             if (str_contains($server->port, '-')) {
                 $port = $server->port;
                 $server->port = (int) Helper::randomPort($port);
@@ -61,14 +61,14 @@ class ServerService
     }
 
     /**
-     * 根据权限组获取可用的用户列表
+     * Get available users list based on permission groups
      * @param array $groupIds
      * @return Collection
      */
-    public static function getAvailableUsers(array $groupIds)
+    public static function getAvailableUsers(Server $node)
     {
         $users = User::toBase()
-            ->whereIn('group_id', $groupIds)
+            ->whereIn('group_id', $node->group_ids)
             ->whereRaw('u + d < transfer_enable')
             ->where(function ($query) {
                 $query->where('expired_at', '>=', time())
@@ -82,10 +82,10 @@ class ServerService
                 'device_limit'
             ])
             ->get();
-        return HookManager::filter('server.users.get', $users, $groupIds);
+        return HookManager::filter('server.users.get', $users, $node);
     }
 
-    // 获取路由规则
+    // Get route rules
     public static function getRoutes(array $routeIds)
     {
         $routes = ServerRoute::select(['id', 'match', 'action', 'action_value'])->whereIn('id', $routeIds)->get();
@@ -93,7 +93,7 @@ class ServerService
     }
 
     /**
-     * 根据协议类型和标识获取服务器
+     * Get server by protocol type and identifier
      * @param int $serverId
      * @param string $serverType
      * @return Server|null

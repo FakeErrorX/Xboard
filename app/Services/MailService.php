@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 class MailService
 {
     /**
-     * 获取需要发送提醒的用户总数
+     * Get total number of users who need reminder emails
      */
     public function getTotalUsersNeedRemind(): int
     {
@@ -28,7 +28,7 @@ class MailService
     }
 
     /**
-     * 分块处理用户提醒邮件
+     * Process user reminder emails in chunks
      */
     public function processUsersInChunks(int $chunkSize, ?callable $progressCallback = null): array
     {
@@ -54,7 +54,7 @@ class MailService
                     $progressCallback();
                 }
 
-                // 定期清理内存
+                // Regular memory cleanup
                 if ($statistics['processed_users'] % 2500 === 0) {
                     gc_collect_cycles();
                 }
@@ -64,7 +64,7 @@ class MailService
     }
 
     /**
-     * 处理用户块
+     * Process user chunk
      */
     private function processUserChunk($users, array &$statistics): void
     {
@@ -73,14 +73,14 @@ class MailService
                 $statistics['processed_users']++;
                 $emailsSent = 0;
 
-                // 检查并发送过期提醒
+                // Check and send expiration reminder
                 if ($user->remind_expire && $this->shouldSendExpireRemind($user)) {
                     $this->remindExpire($user);
                     $statistics['expire_emails']++;
                     $emailsSent++;
                 }
 
-                // 检查并发送流量提醒
+                // Check and send traffic reminder
                 if ($user->remind_traffic && $this->shouldSendTrafficRemind($user)) {
                     $this->remindTraffic($user);
                     $statistics['traffic_emails']++;
@@ -94,7 +94,7 @@ class MailService
             } catch (\Exception $e) {
                 $statistics['errors']++;
 
-                Log::error('发送提醒邮件失败', [
+                Log::error('Failed to send reminder email', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'error' => $e->getMessage()
@@ -104,7 +104,7 @@ class MailService
     }
 
     /**
-     * 检查是否应该发送过期提醒
+     * Check if expiration reminder should be sent
      */
     private function shouldSendExpireRemind(User $user): bool
     {
@@ -120,7 +120,7 @@ class MailService
     }
 
     /**
-     * 检查是否应该发送流量提醒
+     * Check if traffic reminder should be sent
      */
     private function shouldSendTrafficRemind(User $user): bool
     {
@@ -131,7 +131,7 @@ class MailService
         $usedBytes = $user->u + $user->d;
         $usageRatio = $usedBytes / $user->transfer_enable;
 
-        // 流量使用超过80%时发送提醒
+        // Send reminder when traffic usage exceeds 80%
         return $usageRatio >= 0.8;
     }
 
@@ -195,19 +195,19 @@ class MailService
     }
 
     /**
-     * 发送邮件
+     * Send email
      *
-     * @param array $params 包含邮件参数的数组，必须包含以下字段：
-     *   - email: 收件人邮箱地址
-     *   - subject: 邮件主题
-     *   - template_name: 邮件模板名称，例如 "welcome" 或 "password_reset"
-     *   - template_value: 邮件模板变量，一个关联数组，包含模板中需要替换的变量和对应的值
-     * @return array 包含邮件发送结果的数组，包含以下字段：
-     *   - email: 收件人邮箱地址
-     *   - subject: 邮件主题
-     *   - template_name: 邮件模板名称
-     *   - error: 如果邮件发送失败，包含错误信息；否则为 null
-     * @throws \InvalidArgumentException 如果 $params 参数缺少必要的字段，抛出此异常
+     * @param array $params Array containing email parameters, must include the following fields:
+     *   - email: Recipient email address
+     *   - subject: Email subject
+     *   - template_name: Email template name, e.g. "welcome" or "password_reset"
+     *   - template_value: Email template variables, an associative array containing variables to be replaced in the template and their corresponding values
+     * @return array Array containing email sending results, including the following fields:
+     *   - email: Recipient email address
+     *   - subject: Email subject
+     *   - template_name: Email template name
+     *   - error: If email sending fails, contains error information; otherwise null
+     * @throws \InvalidArgumentException If $params parameter is missing required fields, this exception is thrown
      */
     public static function sendEmail(array $params)
     {

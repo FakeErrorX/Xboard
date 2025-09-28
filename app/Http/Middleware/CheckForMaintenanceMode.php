@@ -7,11 +7,11 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance;
 class CheckForMaintenanceMode extends PreventRequestsDuringMaintenance
 {
     /**
-     * 维护模式白名单URI
+     * The URIs that should be reachable while maintenance mode is enabled.
      * @var array<int, string>
      */
     protected $except = [
-        // 示例：
+        // Example:
         // '/api/health-check',
         // '/status'
     ];

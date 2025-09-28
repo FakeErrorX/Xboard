@@ -26,7 +26,7 @@ class Clash extends AbstractProtocol
         $user = $this->user;
         $appName = admin_setting('app_name', 'XBoard');
 
-        // 优先从数据库配置中获取模板
+        // Get template from database configuration first
         $template = admin_setting('subscribe_template_clash', File::exists(base_path(self::CUSTOM_TEMPLATE_FILE))
             ? File::get(base_path(self::CUSTOM_TEMPLATE_FILE))
             : File::get(base_path(self::DEFAULT_TEMPLATE_FILE)));
@@ -138,7 +138,7 @@ class Clash extends AbstractProtocol
             $pluginOpts = data_get($protocol_settings, 'plugin_opts', '');
             $array['plugin'] = $plugin;
 
-            // 解析插件选项
+            // Parse plugin options
             $parsedOpts = collect(explode(';', $pluginOpts))
                 ->filter()
                 ->mapWithKeys(function ($pair) {
@@ -150,7 +150,7 @@ class Clash extends AbstractProtocol
                 })
                 ->all();
 
-            // 根据插件类型进行字段映射
+            // Map fields based on plugin type
             switch ($plugin) {
                 case 'obfs':
                     $array['plugin-opts'] = [
@@ -171,7 +171,7 @@ class Clash extends AbstractProtocol
                     ];
                     break;
                 default:
-                    // 对于其他插件，直接使用解析出的键值对
+                    // For other plugins, directly use the parsed key-value pairs
                     $array['plugin-opts'] = $parsedOpts;
             }
         }
@@ -203,10 +203,12 @@ class Clash extends AbstractProtocol
             case 'tcp':
                 $array['network'] = data_get($protocol_settings, 'network_settings.header.type');
                 if (data_get($protocol_settings, 'network_settings.header.type', 'none') !== 'none') {
-                    $array['http-opts'] = [
+                    if ($httpOpts = array_filter([
                         'headers' => data_get($protocol_settings, 'network_settings.header.request.headers'),
-                        'path' => \Illuminate\Support\Arr::random(data_get($protocol_settings, 'network_settings.header.request.path', ['/']))
-                    ];
+                        'path' => data_get($protocol_settings, 'network_settings.header.request.path', ['/'])
+                    ])) {
+                        $array['http-opts'] = $httpOpts;
+                    }
                 }
                 break;
             case 'ws':
@@ -278,7 +280,7 @@ class Clash extends AbstractProtocol
         $array['username'] = $password;
         $array['password'] = $password;
 
-        // TLS 配置
+        // TLS configuration
         if (data_get($protocol_settings, 'tls')) {
             $array['tls'] = true;
             $array['skip-cert-verify'] = (bool) data_get($protocol_settings, 'tls_settings.allow_insecure', false);
@@ -299,7 +301,7 @@ class Clash extends AbstractProtocol
         $array['username'] = $password;
         $array['password'] = $password;
 
-        // TLS 配置
+        // TLS configuration
         if (data_get($protocol_settings, 'tls')) {
             $array['tls'] = true;
             $array['skip-cert-verify'] = (bool) data_get($protocol_settings, 'tls_settings.allow_insecure', false);

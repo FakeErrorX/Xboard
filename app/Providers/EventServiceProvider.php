@@ -9,14 +9,14 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 class EventServiceProvider extends ServiceProvider
 {
     /**
-     * 事件监听器映射
+     * Event listener mappings
      * @var array<string, array<int, class-string>>
      */
     protected $listen = [
     ];
 
     /**
-     * 注册任何事件
+     * Register any events
      * @return void
      */
     public function boot()

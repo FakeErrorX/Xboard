@@ -6,24 +6,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * 流量重置记录模型
+ * Traffic reset log model
  * 
  * @property int $id
- * @property int $user_id 用户ID
- * @property string $reset_type 重置类型
- * @property \Carbon\Carbon $reset_time 重置时间
- * @property int $old_upload 重置前上传流量
- * @property int $old_download 重置前下载流量
- * @property int $old_total 重置前总流量
- * @property int $new_upload 重置后上传流量
- * @property int $new_download 重置后下载流量
- * @property int $new_total 重置后总流量
- * @property string $trigger_source 触发来源
- * @property array|null $metadata 额外元数据
+ * @property int $user_id User ID
+ * @property string $reset_type Reset type
+ * @property \Carbon\Carbon $reset_time Reset time
+ * @property int $old_upload Upload traffic before reset
+ * @property int $old_download Download traffic before reset
+ * @property int $old_total Total traffic before reset
+ * @property int $new_upload Upload traffic after reset
+ * @property int $new_download Download traffic after reset
+ * @property int $new_total Total traffic after reset
+ * @property string $trigger_source Trigger source
+ * @property array|null $metadata Additional metadata
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * 
- * @property-read User $user 关联用户
+ * @property-read User $user Associated user
  */
 class TrafficResetLog extends Model
 {
@@ -50,7 +50,7 @@ class TrafficResetLog extends Model
         'updated_at' => 'datetime',
     ];
 
-    // 重置类型常量
+    // Reset type constants
     public const TYPE_MONTHLY = 'monthly';
     public const TYPE_FIRST_DAY_MONTH = 'first_day_month';
     public const TYPE_YEARLY = 'yearly';
@@ -58,7 +58,7 @@ class TrafficResetLog extends Model
     public const TYPE_MANUAL = 'manual';
     public const TYPE_PURCHASE = 'purchase';
 
-    // 触发来源常量
+    // Trigger source constants
     public const SOURCE_AUTO = 'auto';
     public const SOURCE_MANUAL = 'manual';
     public const SOURCE_API = 'api';
@@ -68,7 +68,7 @@ class TrafficResetLog extends Model
     public const SOURCE_GIFT_CARD = 'gift_card';
 
     /**
-     * 获取重置类型的多语言名称
+     * Get multilingual name of reset type
      */
     public static function getResetTypeNames(): array
     {
@@ -83,7 +83,7 @@ class TrafficResetLog extends Model
     }
 
     /**
-     * 获取触发来源的多语言名称
+     * Get multilingual name of trigger source
      */
     public static function getSourceNames(): array
     {
@@ -97,7 +97,7 @@ class TrafficResetLog extends Model
     }
 
     /**
-     * 关联用户
+     * Associated user
      */
     public function user(): BelongsTo
     {
@@ -105,7 +105,7 @@ class TrafficResetLog extends Model
     }
 
     /**
-     * 获取重置类型名称
+     * Get reset type name
      */
     public function getResetTypeName(): string
     {
@@ -113,7 +113,7 @@ class TrafficResetLog extends Model
     }
 
     /**
-     * 获取触发来源名称
+     * Get trigger source name
      */
     public function getSourceName(): string
     {
@@ -121,7 +121,7 @@ class TrafficResetLog extends Model
     }
 
     /**
-     * 获取重置的流量差值
+     * Get reset traffic difference
      */
     public function getTrafficDiff(): array
     {
@@ -133,7 +133,7 @@ class TrafficResetLog extends Model
     }
 
     /**
-     * 格式化流量大小
+     * Format traffic size
      */
     public function formatTraffic(int $bytes): string
     {

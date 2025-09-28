@@ -13,20 +13,20 @@ class CreateTrafficResetLogsTable extends Migration
     {
         Schema::create('v2_traffic_reset_logs', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('user_id')->comment('用户ID');
-            $table->string('reset_type', 50)->comment('重置类型');
-            $table->timestamp('reset_time')->comment('重置时间');
-            $table->bigInteger('old_upload')->default(0)->comment('重置前上传流量');
-            $table->bigInteger('old_download')->default(0)->comment('重置前下载流量');
-            $table->bigInteger('old_total')->default(0)->comment('重置前总流量');
-            $table->bigInteger('new_upload')->default(0)->comment('重置后上传流量');
-            $table->bigInteger('new_download')->default(0)->comment('重置后下载流量');
-            $table->bigInteger('new_total')->default(0)->comment('重置后总流量');
-            $table->string('trigger_source', 50)->comment('触发来源');
-            $table->json('metadata')->nullable()->comment('额外元数据');
+            $table->bigInteger('user_id')->comment('User ID');
+            $table->string('reset_type', 50)->comment('Reset type');
+            $table->timestamp('reset_time')->comment('Reset time');
+            $table->bigInteger('old_upload')->default(0)->comment('Upload traffic before reset');
+            $table->bigInteger('old_download')->default(0)->comment('Download traffic before reset');
+            $table->bigInteger('old_total')->default(0)->comment('Total traffic before reset');
+            $table->bigInteger('new_upload')->default(0)->comment('Upload traffic after reset');
+            $table->bigInteger('new_download')->default(0)->comment('Download traffic after reset');
+            $table->bigInteger('new_total')->default(0)->comment('Total traffic after reset');
+            $table->string('trigger_source', 50)->comment('Trigger source');
+            $table->json('metadata')->nullable()->comment('Additional metadata');
             $table->timestamps();
             
-            // 添加索引
+            // Add indexes
             $table->index('user_id', 'idx_user_id');
             $table->index('reset_time', 'idx_reset_time');
             $table->index(['user_id', 'reset_time'], 'idx_user_reset_time');

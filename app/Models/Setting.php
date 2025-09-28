@@ -14,7 +14,7 @@ class Setting extends Model
     ];
 
     /**
-     * 获取实际内容值
+     * Get actual content value
      */
     public function getContentValue()
     {
@@ -24,17 +24,17 @@ class Setting extends Model
             return null;
         }
 
-        // 如果已经是数组，直接返回
+        // If already an array, return directly
         if (is_array($rawValue)) {
             return $rawValue;
         }
 
-        // 如果是数字字符串，返回原值
+        // If it's a numeric string, return original value
         if (is_numeric($rawValue) && !preg_match('/[^\d.]/', $rawValue)) {
             return $rawValue;
         }
 
-        // 尝试解析 JSON
+        // Try to parse JSON
         if (is_string($rawValue)) {
             $decodedValue = json_decode($rawValue, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -46,7 +46,7 @@ class Setting extends Model
     }
 
     /**
-     * 兼容性：保持原有的 value 访问器
+     * Compatibility: maintain original value accessor
      */
     public function getValueAttribute($value)
     {
@@ -54,7 +54,7 @@ class Setting extends Model
     }
 
     /**
-     * 创建或更新设置项
+     * Create or update setting item
      */
     public static function createOrUpdate(string $name, $value): self
     {

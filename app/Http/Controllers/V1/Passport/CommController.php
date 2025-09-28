@@ -18,7 +18,7 @@ class CommController extends Controller
 
     public function sendEmailVerify(CommSendEmailVerify $request)
     {
-                // 验证人机验证码
+                // Verify human verification code
         $captchaService = app(CaptchaService::class);
         [$captchaValid, $captchaError] = $captchaService->verify($request);
         if (!$captchaValid) {
@@ -27,7 +27,7 @@ class CommController extends Controller
 
         $email = $request->input('email');
 
-        // 检查白名单后缀限制
+        // Check whitelist suffix restrictions
         if ((int) admin_setting('email_whitelist_enable', 0)) {
             $isRegisteredEmail = User::where('email', $email)->exists();
             if (!$isRegisteredEmail) {

@@ -11,56 +11,56 @@
         "enable_ticket_notify": {
             "type": "boolean",
             "default": true,
-            "label": "Enable ticket notification",
-            "description": "Whether to enable Telegram notification for ticket creation and replies"
+            "label": "Enable Ticket Notifications",
+            "description": "Whether to enable Telegram notifications for ticket creation and replies"
         },
         "enable_payment_notify": {
             "type": "boolean",
             "default": true,
-            "label": "Enable payment notification",
-            "description": "Whether to enable Telegram notification for successful payments"
+            "label": "Enable Payment Notifications",
+            "description": "Whether to enable Telegram notifications for successful payments"
         },
         "start_welcome_title": {
             "type": "string",
             "default": "🎉 Welcome to XBoard Telegram Bot!",
-            "label": "Welcome title",
-            "description": "Welcome title displayed by /start command"
+            "label": "Welcome Title",
+            "description": "Welcome title displayed by the /start command"
         },
         "start_bot_description": {
             "type": "text",
-            "default": "🤖 I am your personal assistant, I can help you: \\n• Bind your XBoard account\\n• View traffic usage\\n• Get latest subscription link\\n• Manage account binding status",
-            "label": "Bot description",
-            "description": "Bot feature introduction displayed by /start command"
+            "default": "🤖 I am your personal assistant, I can help you:\\n• Bind your XBoard account\\n• Check traffic usage\\n• Get the latest subscription link\\n• Manage account binding status",
+            "label": "Bot Description",
+            "description": "Bot feature introduction displayed by the /start command"
         },
         "start_bind_guide": {
             "type": "text",
-            "default": "🔗 Please bind your XBoard account first: \\n1. Login to your XBoard account\\n2. Copy your subscription link\\n3. Send /bind + subscription link",
-            "label": "Binding guide",
+            "default": "🔗 Please bind your XBoard account first:\\n1. Login to your XBoard account\\n2. Copy your subscription link\\n3. Send /bind + subscription link",
+            "label": "Binding Guide",
             "description": "Binding guide text displayed for unbound users"
         },
         "start_unbind_guide": {
             "type": "text",
-            "default": "📋 Available commands: \\n/traffic - View traffic usage\\n/getlatesturl - Get subscription link\\n/unbind - Unbind account",
-            "label": "Unbind guide",
+            "default": "📋 Available commands:\\n/traffic - Check traffic usage\\n/getlatesturl - Get subscription link\\n/unbind - Unbind account",
+            "label": "Bound User Command List",
             "description": "Command list displayed for bound users"
         },
         "start_bind_commands": {
             "type": "text",
-            "default": "📋 Available commands: \\n/bind [subscription link] - Bind account",
-            "label": "Bind commands",
-            "description": "Available commands for unbound users"
+            "default": "📋 Available commands:\\n/bind [subscription link] - Bind account",
+            "label": "Unbound User Command List",
+            "description": "Command list displayed for unbound users"
         },
         "start_footer": {
             "type": "text",
-            "default": "💡 Tip: All commands need to be used in private chat",
-            "label": "Footer text",
-            "description": "Footer text displayed by /start command"
+            "default": "💡 Tip: All commands must be used in private chat",
+            "label": "Footer Tip",
+            "description": "Tip information at the bottom of the /start command"
         },
         "help_text": {
             "type": "text",
-            "default": "Unknown command, please check help",
-            "label": "Help text",
-            "description": "Text displayed for unknown commands"
+            "default": "Please use the following commands:\\n/bind - Bind account\\n/traffic - Check traffic\\n/getlatesturl - Get latest link",
+            "label": "Help Text",
+            "description": "Help text displayed for unknown commands"
         }
     }
 }

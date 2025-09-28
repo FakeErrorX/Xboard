@@ -32,25 +32,25 @@ class UserUpdate extends FormRequest
     public function messages()
     {
         return [
-            'email.required' => '邮箱不能为空',
-            'email.email' => '邮箱格式不正确',
-            'transfer_enable.numeric' => '流量格式不正确',
-            'expired_at.integer' => '到期时间格式不正确',
-            'banned.required' => '是否封禁不能为空',
-            'banned.in' => '是否封禁格式不正确',
-            'plan_id.integer' => '订阅计划格式不正确',
-            'commission_rate.integer' => '推荐返利比例格式不正确',
-            'commission_rate.nullable' => '推荐返利比例格式不正确',
-            'commission_rate.min' => '推荐返利比例最小为0',
-            'commission_rate.max' => '推荐返利比例最大为100',
-            'discount.integer' => '专属折扣比例格式不正确',
-            'discount.nullable' => '专属折扣比例格式不正确',
-            'discount.min' => '专属折扣比例最小为0',
-            'discount.max' => '专属折扣比例最大为100',
-            'u.integer' => '上行流量格式不正确',
-            'd.integer' => '下行流量格式不正确',
-            'balance.integer' => '余额格式不正确',
-            'commission_balance.integer' => '佣金格式不正确'
+            'email.required' => 'Email cannot be empty',
+            'email.email' => 'Email format is incorrect',
+            'transfer_enable.numeric' => 'Transfer format is incorrect',
+            'expired_at.integer' => 'Expiration time format is incorrect',
+            'banned.required' => 'Ban status cannot be empty',
+            'banned.in' => 'Ban status format is incorrect',
+            'plan_id.integer' => 'Subscription plan format is incorrect',
+            'commission_rate.integer' => 'Referral commission rate format is incorrect',
+            'commission_rate.nullable' => 'Referral commission rate format is incorrect',
+            'commission_rate.min' => 'Referral commission rate minimum is 0',
+            'commission_rate.max' => 'Referral commission rate maximum is 100',
+            'discount.integer' => 'Exclusive discount rate format is incorrect',
+            'discount.nullable' => 'Exclusive discount rate format is incorrect',
+            'discount.min' => 'Exclusive discount rate minimum is 0',
+            'discount.max' => 'Exclusive discount rate maximum is 100',
+            'u.integer' => 'Upload traffic format is incorrect',
+            'd.integer' => 'Download traffic format is incorrect',
+            'balance.integer' => 'Balance format is incorrect',
+            'commission_balance.integer' => 'Commission format is incorrect'
         ];
     }
 }

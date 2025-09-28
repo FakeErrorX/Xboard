@@ -12,7 +12,7 @@ class Plugin extends AbstractPlugin implements PaymentInterface
         $this->filter('available_payment_methods', function ($methods) {
             if ($this->getConfig('enabled', true)) {
                 $methods['EPay'] = [
-                    'name' => $this->getConfig('display_name', '易支付'),
+                    'name' => $this->getConfig('display_name', 'Easy Payment'),
                     'icon' => $this->getConfig('icon', '💳'),
                     'plugin_code' => $this->getPluginCode(),
                     'type' => 'plugin'
@@ -26,31 +26,27 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     {
         return [
             'url' => [
-                'label' => '支付网关地址',
+                'label' => 'Payment Gateway URL',
                 'type' => 'string',
                 'required' => true,
-                'description' => '请填写完整的支付网关地址，包括协议（http或https）'
+                'description' => 'Please enter the complete payment gateway address, including protocol (http or https)'
             ],
             'pid' => [
-                'label' => '商户ID',
+                'label' => 'Merchant ID',
                 'type' => 'string',
-                'description' => '请填写商户ID',
+                'description' => 'Please enter the merchant ID',
                 'required' => true
             ],
             'key' => [
-                'label' => '通信密钥',
+                'label' => 'Communication Key',
                 'type' => 'string',
                 'required' => true,
-                'description' => '请填写通信密钥'
+                'description' => 'Please enter the communication key'
             ],
             'type' => [
-                'label' => '支付类型',
-                'type' => 'select',
-                'options' => [
-                    ['value' => 'alipay', 'label' => '支付宝'],
-                    ['value' => 'wxpay', 'label' => '微信支付'],
-                    ['value' => 'qqpay', 'label' => 'QQ钱包']
-                ]
+                'label' => 'Payment Type',
+                'type' => 'string',
+                'description' => 'Payment type, such as: alipay, wxpay, qqpay, etc., can be customized'
             ],
         ];
     }

@@ -26,7 +26,7 @@ class SingBox extends AbstractProtocol
     const DEFAULT_TEMPLATE_FILE = 'resources/rules/default.sing-box.json';
 
     /**
-     * 多客户端协议支持配置
+     * Multi-client protocol support configuration
      */
     protected $protocolRequirements = [
         'sing-box' => [
@@ -204,17 +204,18 @@ class SingBox extends AbstractProtocol
         }
 
         $transport = match ($protocol_settings['network']) {
-            'tcp' => [
+            'tcp' => data_get($protocol_settings, 'network_settings.header.type', 'none') !== 'none' ? [
                 'type' => 'http',
-                'path' => Arr::random(data_get($protocol_settings, 'network_settings.header.request.path', ['/']))
-            ],
-            'ws' => [
+                'path' => Arr::random(data_get($protocol_settings, 'network_settings.header.request.path', ['/'])),
+                'host' => data_get($protocol_settings, 'network_settings.header.request.headers.Host', [])
+            ] : null,
+            'ws' => array_filter([
                 'type' => 'ws',
                 'path' => data_get($protocol_settings, 'network_settings.path'),
                 'headers' => ($host = data_get($protocol_settings, 'network_settings.headers.Host')) ? ['Host' => $host] : null,
                 'max_early_data' => 2048,
                 'early_data_header_name' => 'Sec-WebSocket-Protocol'
-            ],
+            ]),
             'grpc' => [
                 'type' => 'grpc',
                 'service_name' => data_get($protocol_settings, 'network_settings.serviceName')
@@ -321,7 +322,7 @@ class SingBox extends AbstractProtocol
                 'insecure' => (bool) data_get($protocol_settings, 'allow_insecure', false),
             ]
         ];
-        if ($serverName = data_get($protocol_settings, 'tls_settings.server_name')) {
+        if ($serverName = data_get($protocol_settings, 'server_name')) {
             $array['tls']['server_name'] = $serverName;
         }
         $transport = match (data_get($protocol_settings, 'network')) {
@@ -329,13 +330,13 @@ class SingBox extends AbstractProtocol
                 'type' => 'grpc',
                 'service_name' => data_get($protocol_settings, 'network_settings.serviceName')
             ],
-            'ws' => [
+            'ws' => array_filter([
                 'type' => 'ws',
                 'path' => data_get($protocol_settings, 'network_settings.path'),
                 'headers' => data_get($protocol_settings, 'network_settings.headers.Host') ? ['Host' => [data_get($protocol_settings, 'network_settings.headers.Host')]] : null,
                 'max_early_data' => 2048,
                 'early_data_header_name' => 'Sec-WebSocket-Protocol'
-            ],
+            ]),
             default => null
         };
         $array['transport'] = $transport;
@@ -351,10 +352,10 @@ class SingBox extends AbstractProtocol
             'tag' => $server['name'],
             'tls' => [
                 'enabled' => true,
-                'insecure' => (bool) $protocol_settings['tls']['allow_insecure'],
+                'insecure' => (bool) data_get($protocol_settings, 'tls.allow_insecure', false),
             ]
         ];
-        // 支持 1.11.0 版本及以上 `server_ports` 和 `hop_interval` 配置
+        // Support for version 1.11.0 and above `server_ports` and `hop_interval` configuration
         if ($this->supportsFeature('sing-box', '1.11.0')) {
             if (isset($server['ports'])) {
                 $baseConfig['server_ports'] = [str_replace('-', ':', $server['ports'])];
@@ -364,26 +365,26 @@ class SingBox extends AbstractProtocol
             }
         }
 
-        if ($serverName = data_get($protocol_settings, 'tls_settings.server_name')) {
+        if ($serverName = data_get($protocol_settings, 'tls.server_name')) {
             $baseConfig['tls']['server_name'] = $serverName;
         }
         $speedConfig = [
-            'up_mbps' => $protocol_settings['bandwidth']['up'],
-            'down_mbps' => $protocol_settings['bandwidth']['down'],
+            'up_mbps' => data_get($protocol_settings, 'bandwidth.up'),
+            'down_mbps' => data_get($protocol_settings, 'bandwidth.down'),
         ];
         $versionConfig = match (data_get($protocol_settings, 'version', 1)) {
             2 => [
                 'type' => 'hysteria2',
                 'password' => $password,
-                'obfs' => $protocol_settings['obfs']['open'] ? [
-                    'type' => $protocol_settings['obfs']['type'],
-                    'password' => $protocol_settings['obfs']['password']
+                'obfs' => data_get($protocol_settings, 'obfs.open') ? [
+                    'type' => data_get($protocol_settings, 'obfs.type'),
+                    'password' => data_get($protocol_settings, 'obfs.password')
                 ] : null,
             ],
             default => [
                 'type' => 'hysteria',
                 'auth_str' => $password,
-                'obfs' => $protocol_settings['obfs']['password'],
+                'obfs' => data_get($protocol_settings, 'obfs.password'),
                 'disable_mtu_discovery' => true,
             ]
         };
@@ -459,7 +460,7 @@ class SingBox extends AbstractProtocol
             'tag' => $server['name'],
             'server' => $server['host'],
             'server_port' => $server['port'],
-            'version' => '5', // 默认使用 socks5
+            'version' => '5', // Default use socks5
             'username' => $password,
             'password' => $password,
         ];

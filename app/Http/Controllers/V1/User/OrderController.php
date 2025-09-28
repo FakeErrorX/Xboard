@@ -129,7 +129,7 @@ class OrderController extends Controller
         if ($order->total_amount <= 0) {
             $orderService = new OrderService($order);
             if (!$orderService->paid($order->trade_no))
-                return $this->fail([400, '支付失败']);
+                return $this->fail([400, 'Payment failed']);
             return response([
                 'type' => -1,
                 'data' => true

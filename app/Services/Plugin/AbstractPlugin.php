@@ -24,7 +24,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取插件代码
+     * Get plugin code
      */
     public function getPluginCode(): string
     {
@@ -32,7 +32,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取插件命名空间
+     * Get plugin namespace
      */
     public function getNamespace(): string
     {
@@ -40,7 +40,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取插件基础路径
+     * Get plugin base path
      */
     public function getBasePath(): string
     {
@@ -48,7 +48,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 设置配置
+     * Set configuration
      */
     public function setConfig(array $config): void
     {
@@ -56,7 +56,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取配置
+     * Get configuration
      */
     public function getConfig(?string $key = null, $default = null): mixed
     {
@@ -68,7 +68,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取视图
+     * Get view
      */
     protected function view(string $view, array $data = [], array $mergeData = []): \Illuminate\Contracts\View\View
     {
@@ -76,7 +76,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 注册动作钩子监听器
+     * Register action hook listener
      */
     protected function listen(string $hook, callable $callback, int $priority = 20): void
     {
@@ -84,7 +84,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 注册过滤器钩子
+     * Register filter hook
      */
     protected function filter(string $hook, callable $callback, int $priority = 20): void
     {
@@ -92,7 +92,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 移除事件监听器
+     * Remove event listener
      */
     protected function removeListener(string $hook): void
     {
@@ -100,7 +100,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 注册 Artisan 命令
+     * Register Artisan command
      */
     protected function registerCommand(string $commandClass): void
     {
@@ -110,7 +110,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 注册插件命令目录
+     * Register plugin command directory
      */
     public function registerCommands(): void
     {
@@ -129,7 +129,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 中断当前请求并返回新的响应
+     * Interrupt current request and return new response
      *
      * @param Response|string|array $response
      * @return never
@@ -140,39 +140,39 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 插件启动时调用
+     * Called when plugin starts
      */
     public function boot(): void
     {
-        // 插件启动时的初始化逻辑
+        // Initialization logic when plugin starts
     }
 
     /**
-     * 插件安装时调用
+     * Called when plugin is installed
      */
     public function install(): void
     {
-        // 插件安装时的初始化逻辑
+        // Initialization logic when plugin is installed
     }
 
     /**
-     * 插件卸载时调用
+     * Called when plugin is uninstalled
      */
     public function cleanup(): void
     {
-        // 插件卸载时的清理逻辑
+        // Plugin cleanup logic when uninstalling
     }
 
     /**
-     * 插件更新时调用
+     * Called when plugin is updated
      */
     public function update(string $oldVersion, string $newVersion): void
     {
-        // 插件更新时的迁移逻辑
+        // Plugin migration logic when updating
     }
 
     /**
-     * 获取插件资源URL
+     * Get plugin asset URL
      */
     protected function asset(string $path): string
     {
@@ -180,7 +180,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取插件配置项
+     * Get plugin configuration item
      */
     protected function getConfigValue(string $key, $default = null)
     {
@@ -188,7 +188,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取插件数据库迁移路径
+     * Get plugin database migration path
      */
     protected function getMigrationsPath(): string
     {
@@ -196,7 +196,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取插件视图路径
+     * Get plugin views path
      */
     protected function getViewsPath(): string
     {
@@ -204,7 +204,7 @@ abstract class AbstractPlugin
     }
 
     /**
-     * 获取插件资源路径
+     * Get plugin assets path
      */
     protected function getAssetsPath(): string
     {

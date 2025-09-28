@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\File;
 class UpdateService
 {
     const UPDATE_CHECK_INTERVAL = 86400; // 24 hours
-    const GITHUB_API_URL = 'https://api.github.com/repos/fakeerrorx/xboard/commits';
+    const GITHUB_API_URL = 'https://api.github.com/repos/FakeErrorX/xboard/commits';
     const CACHE_UPDATE_INFO = 'UPDATE_INFO';
     const CACHE_LAST_CHECK = 'LAST_UPDATE_CHECK';
     const CACHE_UPDATE_LOCK = 'UPDATE_LOCK';
@@ -424,7 +424,7 @@ class UpdateService
     protected function getLocalGitLogs(int $limit = 50): array
     {
         try {
-            // 获取本地git log
+            // Get local git log
             $result = Process::run(
                 sprintf('git log -%d --pretty=format:"%%H||%%s||%%an||%%ai"', $limit)
             );

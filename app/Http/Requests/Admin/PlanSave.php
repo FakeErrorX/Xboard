@@ -49,7 +49,7 @@ class PlanSave extends FormRequest
     }
 
     /**
-     * 验证价格配置
+     * Validate price configuration
      */
     protected function validatePrices(Validator $validator): void
     {
@@ -59,33 +59,33 @@ class PlanSave extends FormRequest
             return;
         }
 
-        // 获取所有有效的周期
+        // Get all valid periods
         $validPeriods = array_keys(Plan::getAvailablePeriods());
         
         foreach ($prices as $period => $price) {
-            // 验证周期是否有效
+            // Validate if period is valid
             if (!in_array($period, $validPeriods)) {
                 $validator->errors()->add(
                     "prices.{$period}", 
-                    "不支持的订阅周期: {$period}"
+                    "Unsupported subscription period: {$period}"
                 );
                 continue;
             }
 
-            // 价格可以为 null、空字符串或大于 0 的数字
+            // Price can be null, empty string, or a number greater than 0
             if ($price !== null && $price !== '') {
-                // 转换为数字进行验证
+                // Convert to number for validation
                 $numericPrice = is_numeric($price) ? (float) $price : null;
                 
                 if ($numericPrice === null) {
                     $validator->errors()->add(
                         "prices.{$period}", 
-                        "价格必须是数字格式"
+                        "Price must be in numeric format"
                     );
                 } elseif ($numericPrice <= 0) {
                     $validator->errors()->add(
                         "prices.{$period}", 
-                        "价格必须大于 0（如不需要此周期请留空或设为 null）"
+                        "Price must be greater than 0 (if not needed for this period, leave empty or set to null)"
                     );
                 }
             }
@@ -93,26 +93,26 @@ class PlanSave extends FormRequest
     }
 
     /**
-     * 处理验证后的数据
+     * Process validated data
      */
     protected function passedValidation(): void
     {
-        // 清理和格式化价格数据
+        // Clean and format price data
         $prices = $this->input('prices', []);
         $cleanedPrices = [];
 
         foreach ($prices as $period => $price) {
-            // 只保留有效的正数价格
+            // Only keep valid positive prices
             if ($price !== null && $price !== '' && is_numeric($price)) {
                 $numericPrice = (float) $price;
                 if ($numericPrice > 0) {
-                    // 转换为浮点数并保留两位小数
+                    // Convert to float and keep two decimal places
                     $cleanedPrices[$period] = round($numericPrice, 2);
                 }
             }
         }
 
-        // 更新请求中的价格数据
+        // Update price data in request
         $this->merge(['prices' => $cleanedPrices]);
     }
 
@@ -122,22 +122,22 @@ class PlanSave extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => '套餐名称不能为空',
-            'name.max' => '套餐名称不能超过 255 个字符',
-            'transfer_enable.required' => '流量配额不能为空',
-            'transfer_enable.integer' => '流量配额必须是整数',
-            'transfer_enable.min' => '流量配额必须大于 0',
-            'prices.array' => '价格配置格式错误',
-            'prices.*.numeric' => '价格必须是数字',
-            'prices.*.min' => '价格不能为负数',
-            'group_id.integer' => '权限组ID必须是整数',
-            'speed_limit.integer' => '速度限制必须是整数',
-            'speed_limit.min' => '速度限制不能为负数',
-            'device_limit.integer' => '设备限制必须是整数',
-            'device_limit.min' => '设备限制不能为负数',
-            'capacity_limit.integer' => '容量限制必须是整数',
-            'capacity_limit.min' => '容量限制不能为负数',
-            'tags.array' => '标签格式必须是数组',
+            'name.required' => 'Plan name cannot be empty',
+            'name.max' => 'Plan name cannot exceed 255 characters',
+            'transfer_enable.required' => 'Traffic quota cannot be empty',
+            'transfer_enable.integer' => 'Traffic quota must be an integer',
+            'transfer_enable.min' => 'Traffic quota must be greater than 0',
+            'prices.array' => 'Price configuration format error',
+            'prices.*.numeric' => 'Price must be a number',
+            'prices.*.min' => 'Price cannot be negative',
+            'group_id.integer' => 'Permission group ID must be an integer',
+            'speed_limit.integer' => 'Speed limit must be an integer',
+            'speed_limit.min' => 'Speed limit cannot be negative',
+            'device_limit.integer' => 'Device limit must be an integer',
+            'device_limit.min' => 'Device limit cannot be negative',
+            'capacity_limit.integer' => 'Capacity limit must be an integer',
+            'capacity_limit.min' => 'Capacity limit cannot be negative',
+            'tags.array' => 'Tag format must be an array',
         ];
     }
 

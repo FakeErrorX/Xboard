@@ -21,7 +21,7 @@
         "servers": [
             {
                 "address": "https://1.1.1.1/dns-query",
-                "detour": "节点选择",
+                "detour": "Node Selection",
                 "tag": "remote"
             },
             {
@@ -80,16 +80,16 @@
     ],
     "outbounds": [
         {
-            "tag": "节点选择",
+            "tag": "Node Selection",
             "type": "selector",
-            "default": "自动选择",
-            "outbounds": ["自动选择"]
+            "default": "Auto Select",
+            "outbounds": ["Auto Select"]
         },
         { "tag": "direct", "type": "direct" },
         { "tag": "block", "type": "block" },
         { "tag": "dns-out", "type": "dns" },
         {
-            "tag": "自动选择",
+            "tag": "Auto Select",
             "type": "urltest",
             "outbounds": []
         }
@@ -107,7 +107,7 @@
             },
             {
                 "clash_mode": "global",
-                "outbound": "节点选择"
+                "outbound": "Node Selection"
             },
             {
                 "ip_is_private": true,
@@ -124,14 +124,14 @@
                 "type": "remote",
                 "format": "binary",
                 "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs",
-                "download_detour": "自动选择"
+                "download_detour": "Auto Select"
             },
             {
                 "tag": "geoip-cn",
                 "type": "remote",
                 "format": "binary",
                 "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
-                "download_detour": "自动选择"
+                "download_detour": "Auto Select"
             }
         ]
     }

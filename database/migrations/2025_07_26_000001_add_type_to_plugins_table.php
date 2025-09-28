@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('v2_plugins', function (Blueprint $table) {
-            $table->string('type', 20)->default('feature')->after('code')->comment('插件类型：feature功能性，payment支付型');
+            $table->string('type', 20)->default('feature')->after('code')->comment('Plugin type: feature functional, payment payment type');
             $table->index(['type', 'is_enabled']);
         });
     }

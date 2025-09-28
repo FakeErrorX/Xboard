@@ -79,8 +79,8 @@ class Surge extends AbstractProtocol
         $useTraffic = $upload + $download;
         $totalTraffic = round($user['transfer_enable'] / (1024 * 1024 * 1024), 2);
         $unusedTraffic = $totalTraffic - $useTraffic;
-        $expireDate = $user['expired_at'] === NULL ? '长期有效' : date('Y-m-d H:i:s', $user['expired_at']);
-        $subscribeInfo = "title={$appName}订阅信息, content=上传流量：{$upload}GB\\n下载流量：{$download}GB\\n剩余流量：{ $unusedTraffic }GB\\n套餐流量：{$totalTraffic}GB\\n到期时间：{$expireDate}";
+        $expireDate = $user['expired_at'] === NULL ? 'Permanent' : date('Y-m-d H:i:s', $user['expired_at']);
+        $subscribeInfo = "title={$appName} Subscription Info, content=Upload Traffic: {$upload}GB\\nDownload Traffic: {$download}GB\\nRemaining Traffic: { $unusedTraffic }GB\\nPackage Traffic: {$totalTraffic}GB\\nExpiry Time: {$expireDate}";
         $config = str_replace('$subscribe_info', $subscribeInfo, $config);
 
         return response($config, 200)
@@ -104,7 +104,7 @@ class Surge extends AbstractProtocol
         if (data_get($protocol_settings, 'plugin') && data_get($protocol_settings, 'plugin_opts')) {
             $plugin = data_get($protocol_settings, 'plugin');
             $pluginOpts = data_get($protocol_settings, 'plugin_opts', '');
-            // 解析插件选项
+            // Parse plugin options
             $parsedOpts = collect(explode(';', $pluginOpts))
                 ->filter()
                 ->mapWithKeys(function ($pair) {
@@ -193,7 +193,7 @@ class Surge extends AbstractProtocol
         return $uri;
     }
 
-    //参考文档: https://manual.nssurge.com/policy/proxy.html
+    // Reference documentation: https://manual.nssurge.com/policy/proxy.html
     public static function buildHysteria($password, $server)
     {
         $protocol_settings = $server['protocol_settings'];

@@ -64,10 +64,10 @@ class AuthService
     }
 
     /**
-     * 解密认证数据
+     * Decrypt authentication data
      *
      * @param string $authorization
-     * @return array|null 用户数据或null
+     * @return array|null User data or null
      */
     public static function decryptAuthData(string $authorization): ?array
     {

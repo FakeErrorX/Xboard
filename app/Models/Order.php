@@ -53,33 +53,33 @@ class Order extends Model
         'handling_amount' => 'integer'
     ];
 
-    const STATUS_PENDING = 0; // 待支付
-    const STATUS_PROCESSING = 1; // 开通中
-    const STATUS_CANCELLED = 2; // 已取消
-    const STATUS_COMPLETED = 3; // 已完成
-    const STATUS_DISCOUNTED = 4; // 已折抵
+    const STATUS_PENDING = 0; // Pending payment
+    const STATUS_PROCESSING = 1; // Processing
+    const STATUS_CANCELLED = 2; // Cancelled
+    const STATUS_COMPLETED = 3; // Completed
+    const STATUS_DISCOUNTED = 4; // Discounted
 
     public static $statusMap = [
-        self::STATUS_PENDING => '待支付',
-        self::STATUS_PROCESSING => '开通中',
-        self::STATUS_CANCELLED => '已取消',
-        self::STATUS_COMPLETED => '已完成',
-        self::STATUS_DISCOUNTED => '已折抵',
+        self::STATUS_PENDING => 'Pending Payment',
+        self::STATUS_PROCESSING => 'Processing',
+        self::STATUS_CANCELLED => 'Cancelled',
+        self::STATUS_COMPLETED => 'Completed',
+        self::STATUS_DISCOUNTED => 'Discounted',
     ];
 
-    const TYPE_NEW_PURCHASE = 1; // 新购
-    const TYPE_RENEWAL = 2; // 续费
-    const TYPE_UPGRADE = 3; // 升级
-    const TYPE_RESET_TRAFFIC = 4; //流量重置包
+    const TYPE_NEW_PURCHASE = 1; // New purchase
+    const TYPE_RENEWAL = 2; // Renewal
+    const TYPE_UPGRADE = 3; // Upgrade
+    const TYPE_RESET_TRAFFIC = 4; // Traffic reset package
     public static $typeMap = [
-        self::TYPE_NEW_PURCHASE => '新购',
-        self::TYPE_RENEWAL => '续费',
-        self::TYPE_UPGRADE => '升级',
-        self::TYPE_RESET_TRAFFIC => '流量重置',
+        self::TYPE_NEW_PURCHASE => 'New Purchase',
+        self::TYPE_RENEWAL => 'Renewal',
+        self::TYPE_UPGRADE => 'Upgrade',
+        self::TYPE_RESET_TRAFFIC => 'Traffic Reset',
     ];
 
     /**
-     * 获取与订单关联的支付方式
+     * Get payment method associated with order
      */
     public function payment(): BelongsTo
     {
@@ -87,7 +87,7 @@ class Order extends Model
     }
 
     /**
-     * 获取与订单关联的用户
+     * Get user associated with order
      */
     public function user(): BelongsTo
     {
@@ -95,7 +95,7 @@ class Order extends Model
     }
 
     /**
-     * 获取邀请人
+     * Get inviter
      */
     public function invite_user(): BelongsTo
     {
@@ -103,7 +103,7 @@ class Order extends Model
     }
 
     /**
-     * 获取与订单关联的套餐
+     * Get plan associated with order
      */
     public function plan(): BelongsTo
     {
@@ -111,7 +111,7 @@ class Order extends Model
     }
 
     /**
-     * 获取与订单关联的佣金记录
+     * Get commission records associated with order
      */
     public function commission_log(): HasMany
     {

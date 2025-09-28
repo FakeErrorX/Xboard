@@ -58,9 +58,9 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         if ($exception instanceof ViewException) {
-            return $this->fail([500, '主题渲染失败。如更新主题，参数可能发生变化请重新配置主题后再试。']);
+            return $this->fail([500, 'Theme rendering failed. If you updated the theme, parameters may have changed. Please reconfigure the theme and try again.']);
         }
-        // ApiException主动抛出错误
+        // ApiException actively throws errors
         if ($exception instanceof ApiException) {
             $code = $exception->getCode();
             $message = $exception->getMessage();

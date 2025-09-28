@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
  * App\Models\ServerGroup
  *
  * @property int $id
- * @property string $name 分组名
+ * @property string $name Group name
  * @property int $created_at
  * @property int $updated_at
- * @property-read int $server_count 服务器数量
+ * @property-read int $server_count Server count
  */
 class ServerGroup extends Model
 {
@@ -35,7 +35,7 @@ class ServerGroup extends Model
     }
 
     /**
-     * 获取服务器数量
+     * Get server count
      */
     protected function serverCount(): Attribute
     {

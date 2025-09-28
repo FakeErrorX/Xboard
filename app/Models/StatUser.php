@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
  * App\Models\StatUser
  *
  * @property int $id
- * @property int $user_id 用户ID
- * @property int $u 上行流量
- * @property int $d 下行流量
- * @property int $record_at 记录时间
- * @property int $created_at
- * @property int $updated_at
- * @property-read int $value 通过SUM(u + d)计算的总流量值，仅在查询指定时可用
+ * @property int $user_id User ID
+ * @property int $u Upload traffic
+ * @property int $d Download traffic
+ * @property int $record_at Record time
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read int $value Total traffic value calculated by SUM(u + d), only available when query specifies
  */
 class StatUser extends Model
 {

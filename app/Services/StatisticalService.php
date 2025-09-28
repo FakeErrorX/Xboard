@@ -42,7 +42,7 @@ class StatisticalService
     }
 
     /**
-     * 生成统计报表
+     * Generate statistical reports
      */
     public function generateStatData(): array
     {
@@ -86,29 +86,29 @@ class StatisticalService
     }
 
     /**
-     * 往服务器报表缓存正追加流量使用数据
+     * Append traffic usage data to server report cache
      */
     public function statServer($serverId, $serverType, $u, $d)
     {
-        $u_menber = "{$serverType}_{$serverId}_u"; //储存上传流量的集合成员
-        $d_menber = "{$serverType}_{$serverId}_d"; //储存下载流量的集合成员
+        $u_menber = "{$serverType}_{$serverId}_u"; //Store upload traffic collection members
+        $d_menber = "{$serverType}_{$serverId}_d"; //Store download traffic collection members
         $this->redis->zincrby($this->statServerKey, $u, $u_menber);
         $this->redis->zincrby($this->statServerKey, $d, $d_menber);
     }
 
     /**
-     * 追加用户使用流量
+     * Append user traffic usage
      */
     public function statUser($rate, $userId, $u, $d)
     {
-        $u_menber = "{$rate}_{$userId}_u"; //储存上传流量的集合成员
-        $d_menber = "{$rate}_{$userId}_d"; //储存下载流量的集合成员
+        $u_menber = "{$rate}_{$userId}_u"; //Store upload traffic collection members
+        $d_menber = "{$rate}_{$userId}_d"; //Store download traffic collection members
         $this->redis->zincrby($this->statUserKey, $u, $u_menber);
         $this->redis->zincrby($this->statUserKey, $d, $d_menber);
     }
 
     /**
-     * 获取指定用户的流量使用情况
+     * Get traffic usage for specified user
      */
     public function getStatUserByUserID(int|string $userId): array
     {
@@ -133,7 +133,7 @@ class StatisticalService
     }
 
     /**
-     * 获取缓存中的用户报表
+     * Get user reports from cache
      */
     public function getStatUser()
     {
@@ -193,7 +193,7 @@ class StatisticalService
     }
 
     /**
-     * 清除用户报表缓存数据
+     * Clear user report cache data
      */
     public function clearStatUser()
     {
@@ -201,7 +201,7 @@ class StatisticalService
     }
 
     /**
-     * 清除服务器报表缓存数据
+     * Clear server report cache data
      */
     public function clearStatServer()
     {
@@ -256,8 +256,8 @@ class StatisticalService
     }
 
     /**
-     * 获取指定日期范围内的节点流量排行
-     * @param mixed ...$times 可选值：'today', 'tomorrow', 'last_week'，或指定日期范围，格式：timestamp
+     * Get node traffic ranking within specified date range
+     * @param mixed ...$times Optional values: 'today', 'tomorrow', 'last_week', or specified date range, format: timestamp
      * @return array
      */
 
@@ -294,8 +294,8 @@ class StatisticalService
                     ->where('record_type', 'd');
             }
         )
-            ->withSum('stats as u', 'u') // 预加载 u 的总和
-            ->withSum('stats as d', 'd') // 预加载 d 的总和
+            ->withSum('stats as u', 'u') // Preload u sum
+            ->withSum('stats as d', 'd') // Preload d sum
             ->get()
             ->map(function ($item) {
                 return [

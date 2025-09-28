@@ -14,8 +14,8 @@ class AddColumnVersionAndIsObfsToServerHysteriaTable extends Migration
     public function up()
     {
         Schema::table('v2_server_hysteria', function (Blueprint $table) {
-            $table->tinyInteger('version',false,true)->default(1)->comment('hysteria版本,Version:1\2');
-            $table->boolean('is_obfs')->default(true)->comment('是否开启obfs');
+            $table->tinyInteger('version',false,true)->default(1)->comment('hysteria version, Version:1\2');
+            $table->boolean('is_obfs')->default(true)->comment('Enable obfs');
         });
     }
 

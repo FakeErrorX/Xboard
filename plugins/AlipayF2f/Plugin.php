@@ -15,7 +15,7 @@ class Plugin extends AbstractPlugin implements PaymentInterface
         $this->filter('available_payment_methods', function ($methods) {
             if ($this->getConfig('enabled', true)) {
                 $methods['AlipayF2F'] = [
-                    'name' => $this->getConfig('display_name', '支付宝当面付'),
+                    'name' => $this->getConfig('display_name', 'Alipay Face to Face'),
                     'icon' => $this->getConfig('icon', '💙'),
                     'plugin_code' => $this->getPluginCode(),
                     'type' => 'plugin'
@@ -29,27 +29,27 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     {
         return [
             'app_id' => [
-                'label' => '支付宝APPID',
+                'label' => 'Alipay APP ID',
                 'type' => 'string',
                 'required' => true,
-                'description' => '支付宝开放平台应用的APPID'
+                'description' => 'Alipay Open Platform Application APP ID'
             ],
             'private_key' => [
-                'label' => '支付宝私钥',
-                'type' => 'textarea',
+                'label' => 'Alipay Private Key',
+                'type' => 'text',
                 'required' => true,
-                'description' => '应用私钥，用于签名'
+                'description' => 'Application private key for signing'
             ],
             'public_key' => [
-                'label' => '支付宝公钥',
-                'type' => 'textarea',
+                'label' => 'Alipay Public Key',
+                'type' => 'text',
                 'required' => true,
-                'description' => '支付宝公钥，用于验签'
+                'description' => 'Alipay public key for signature verification'
             ],
             'product_name' => [
-                'label' => '自定义商品名称',
+                'label' => 'Custom Product Name',
                 'type' => 'string',
-                'description' => '将会体现在支付宝账单中'
+                'description' => 'Will be displayed in Alipay billing'
             ]
         ];
     }
@@ -64,7 +64,7 @@ class Plugin extends AbstractPlugin implements PaymentInterface
             $gateway->setAlipayPublicKey($this->getConfig('public_key'));
             $gateway->setNotifyUrl($order['notify_url']);
             $gateway->setBizContent([
-                'subject' => $this->getConfig('product_name') ?? (admin_setting('app_name', 'XBoard') . ' - 订阅'),
+                'subject' => $this->getConfig('product_name') ?? (admin_setting('app_name', 'XBoard') . ' - Subscription'),
                 'out_trade_no' => $order['trade_no'],
                 'total_amount' => $order['total_amount'] / 100
             ]);

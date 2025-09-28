@@ -19,7 +19,7 @@ class GroupController extends Controller
             ->withCount('users')
             ->get();
 
-        // 只在需要时手动加载server_count
+        // Only manually load server_count when needed
         $serverGroups->each(function ($group) {
             $group->setAttribute('server_count', $group->server_count);
         });
@@ -30,7 +30,7 @@ class GroupController extends Controller
     public function save(Request $request)
     {
         if (empty($request->input('name'))) {
-            return $this->fail([422, '组名不能为空']);
+            return $this->fail([422, 'Group name cannot be empty']);
         }
 
         if ($request->input('id')) {
@@ -49,17 +49,17 @@ class GroupController extends Controller
 
         $serverGroup = ServerGroup::find($groupId);
         if (!$serverGroup) {
-            return $this->fail([400202, '组不存在']);
+            return $this->fail([400202, 'Group does not exist']);
         }
         if (Server::whereJsonContains('group_ids', $groupId)->exists()) {
-            return $this->fail([400, '该组已被节点所使用，无法删除']);
+            return $this->fail([400, 'This group is being used by nodes and cannot be deleted']);
         }
 
         if (Plan::where('group_id', $groupId)->exists()) {
-            return $this->fail([400, '该组已被订阅所使用，无法删除']);
+            return $this->fail([400, 'This group is being used by subscriptions and cannot be deleted']);
         }
         if (User::where('group_id', $groupId)->exists()) {
-            return $this->fail([400, '该组已被用户所使用，无法删除']);
+            return $this->fail([400, 'This group is being used by users and cannot be deleted']);
         }
         return $this->success($serverGroup->delete());
     }

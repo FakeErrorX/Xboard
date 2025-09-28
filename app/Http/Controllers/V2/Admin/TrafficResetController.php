@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 /**
- * 流量重置管理控制器
+ * Traffic reset management controller
  */
 class TrafficResetController extends Controller
 {
@@ -22,7 +22,7 @@ class TrafficResetController extends Controller
   }
 
   /**
-   * 获取流量重置日志列表
+   * Get traffic reset log list
    */
   public function logs(Request $request): JsonResponse
   {
@@ -40,7 +40,7 @@ class TrafficResetController extends Controller
     $query = TrafficResetLog::with(['user:id,email'])
       ->orderBy('reset_time', 'desc');
 
-    // 筛选条件
+    // Filter conditions
     if ($request->filled('user_id')) {
       $query->where('user_id', $request->user_id);
     }
@@ -70,7 +70,7 @@ class TrafficResetController extends Controller
     $perPage = $request->get('per_page', 20);
     $logs = $query->paginate($perPage);
 
-    // 格式化数据
+    // Format data
     $formattedLogs = $logs->getCollection()->map(function (TrafficResetLog $log) {
       return [
         'id' => $log->id,
@@ -110,7 +110,7 @@ class TrafficResetController extends Controller
   }
 
   /**
-   * 获取流量重置统计信息
+   * Get traffic reset statistics information
    */
   public function stats(Request $request): JsonResponse
   {
@@ -140,7 +140,7 @@ class TrafficResetController extends Controller
   }
 
   /**
-   * 手动重置用户流量
+   * Manually reset user traffic
    */
   public function resetUser(Request $request): JsonResponse
   {
@@ -185,7 +185,7 @@ class TrafficResetController extends Controller
 
 
   /**
-   * 获取用户重置历史
+   * Get user reset history
    */
   public function userHistory(Request $request, int $userId): JsonResponse
   {

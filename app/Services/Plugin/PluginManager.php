@@ -24,7 +24,7 @@ class PluginManager
     }
 
     /**
-     * 获取插件的命名空间
+     * Get plugin namespace
      */
     public function getPluginNamespace(string $pluginCode): string
     {
@@ -32,38 +32,15 @@ class PluginManager
     }
 
     /**
-     * 获取插件的基础路径
+     * Get plugin base path
      */
     public function getPluginPath(string $pluginCode): string
     {
-        $expectedPath = $this->pluginPath . '/' . Str::studly($pluginCode);
-        
-        // If the expected path exists, return it
-        if (is_dir($expectedPath)) {
-            return $expectedPath;
-        }
-        
-        // Try case-insensitive search
-        $expectedDirName = Str::studly($pluginCode);
-        if (is_dir($this->pluginPath)) {
-            $directories = @scandir($this->pluginPath);
-            if ($directories !== false) {
-                foreach ($directories as $dir) {
-                    if ($dir === '.' || $dir === '..') continue;
-                    
-                    if (strtolower($dir) === strtolower($expectedDirName)) {
-                        return $this->pluginPath . '/' . $dir;
-                    }
-                }
-            }
-        }
-        
-        // Return the expected path even if it doesn't exist (for error handling)
-        return $expectedPath;
+        return $this->pluginPath . '/' . Str::studly($pluginCode);
     }
 
     /**
-     * 加载插件类
+     * Load plugin class
      */
     protected function loadPlugin(string $pluginCode): ?AbstractPlugin
     {
@@ -76,7 +53,8 @@ class PluginManager
         if (!class_exists($pluginClass)) {
             $pluginFile = $this->getPluginPath($pluginCode) . '/Plugin.php';
             if (!File::exists($pluginFile)) {
-                Log::error("Plugin class file not found: {$pluginFile}");
+                Log::warning("Plugin class file not found: {$pluginFile}");
+                Plugin::query()->where('code', $pluginCode)->delete();
                 return null;
             }
             require_once $pluginFile;
@@ -94,7 +72,7 @@ class PluginManager
     }
 
     /**
-     * 注册插件的服务提供者
+     * Register plugin service provider
      */
     protected function registerServiceProvider(string $pluginCode): void
     {
@@ -106,7 +84,7 @@ class PluginManager
     }
 
     /**
-     * 加载插件的路由
+     * Load plugin routes
      */
     protected function loadRoutes(string $pluginCode): void
     {
@@ -132,23 +110,24 @@ class PluginManager
     }
 
     /**
-     * 加载插件的视图
+     * Load plugin views
      */
     protected function loadViews(string $pluginCode): void
     {
-        $viewsPath = $this->getPluginPath($pluginCode) . '/views';
+        $viewsPath = $this->getPluginPath($pluginCode) . '/resources/views';
         if (File::exists($viewsPath)) {
             View::addNamespace(Str::studly($pluginCode), $viewsPath);
+            return;
         }
     }
 
     /**
-     * 注册插件命令
+     * Register plugin commands
      */
     protected function registerPluginCommands(string $pluginCode, AbstractPlugin $pluginInstance): void
     {
         try {
-            // 调用插件的命令注册方法
+            // Call plugin command registration method
             $pluginInstance->registerCommands();
         } catch (\Exception $e) {
             Log::error("Failed to register commands for plugin '{$pluginCode}': " . $e->getMessage());
@@ -156,40 +135,14 @@ class PluginManager
     }
 
     /**
-     * 安装插件
+     * Install plugin
      */
     public function install(string $pluginCode): bool
     {
-        $pluginPath = $this->getPluginPath($pluginCode);
-        $configFile = $pluginPath . '/config.json';
+        $configFile = $this->getPluginPath($pluginCode) . '/config.json';
 
         if (!File::exists($configFile)) {
-            $availablePluginDirs = 'unknown';
-            if (is_dir($this->pluginPath)) {
-                $dirs = @scandir($this->pluginPath);
-                if ($dirs !== false) {
-                    $availablePluginDirs = array_diff($dirs, ['.', '..']);
-                }
-            }
-            
-            $pluginDirFiles = 'unknown';
-            if (is_dir($pluginPath)) {
-                $files = @scandir($pluginPath);
-                if ($files !== false) {
-                    $pluginDirFiles = $files;
-                }
-            }
-            
-            Log::error("Plugin config file not found", [
-                'plugin_code' => $pluginCode,
-                'plugin_path' => $pluginPath,
-                'config_file' => $configFile,
-                'plugins_base_path' => $this->pluginPath,
-                'directory_exists' => is_dir($pluginPath),
-                'files_in_plugin_dir' => $pluginDirFiles,
-                'available_plugin_dirs' => $availablePluginDirs
-            ]);
-            throw new \Exception("Plugin config file not found: {$configFile}");
+            throw new \Exception('Plugin config file not found');
         }
 
         $config = json_decode(File::get($configFile), true);
@@ -197,28 +150,28 @@ class PluginManager
             throw new \Exception('Invalid plugin config');
         }
 
-        // 检查插件是否已安装
+        // Check if plugin is already installed
         if (Plugin::where('code', $pluginCode)->exists()) {
             throw new \Exception('Plugin already installed');
         }
 
-        // 检查依赖
+        // Check dependencies
         if (!$this->checkDependencies($config['require'] ?? [])) {
             throw new \Exception('Dependencies not satisfied');
         }
 
-        // 运行数据库迁移
+        // Run database migrations
         $this->runMigrations(pluginCode: $pluginCode);
 
         DB::beginTransaction();
         try {
-            // 提取配置默认值
+            // Extract configuration default values
             $defaultValues = $this->extractDefaultConfig($config);
 
-            // 创建插件实例
+            // Create plugin instance
             $plugin = $this->loadPlugin($pluginCode);
 
-            // 注册到数据库
+            // Register to database
             Plugin::create([
                 'code' => $pluginCode,
                 'name' => $config['name'],
@@ -229,12 +182,12 @@ class PluginManager
                 'installed_at' => now(),
             ]);
 
-            // 运行插件安装方法
+            // Run plugin installation method
             if (method_exists($plugin, 'install')) {
                 $plugin->install();
             }
 
-            // 发布插件资源
+            // Publish plugin assets
             $this->publishAssets($pluginCode);
 
             DB::commit();
@@ -248,7 +201,7 @@ class PluginManager
     }
 
     /**
-     * 提取插件默认配置
+     * Extract plugin default configuration
      */
     protected function extractDefaultConfig(array $config): array
     {
@@ -266,7 +219,7 @@ class PluginManager
     }
 
     /**
-     * 运行插件数据库迁移
+     * Run plugin database migrations
      */
     protected function runMigrations(string $pluginCode): void
     {
@@ -281,7 +234,7 @@ class PluginManager
     }
 
     /**
-     * 回滚插件数据库迁移
+     * Rollback plugin database migrations
      */
     protected function runMigrationsRollback(string $pluginCode): void
     {
@@ -296,7 +249,7 @@ class PluginManager
     }
 
     /**
-     * 发布插件资源
+     * Publish plugin assets
      */
     protected function publishAssets(string $pluginCode): void
     {
@@ -309,7 +262,7 @@ class PluginManager
     }
 
     /**
-     * 验证配置文件
+     * Validate configuration file
      */
     protected function validateConfig(array $config): bool
     {
@@ -327,17 +280,17 @@ class PluginManager
             }
         }
 
-        // 验证插件代码格式
+        // Validate plugin code format
         if (!preg_match('/^[a-z0-9_]+$/', $config['code'])) {
             return false;
         }
 
-        // 验证版本号格式
+        // Validate version number format
         if (!preg_match('/^\d+\.\d+\.\d+$/', $config['version'])) {
             return false;
         }
 
-        // 验证插件类型
+        // Validate plugin type
         if (isset($config['type'])) {
             $validTypes = ['feature', 'payment'];
             if (!in_array($config['type'], $validTypes)) {
@@ -349,7 +302,7 @@ class PluginManager
     }
 
     /**
-     * 启用插件
+     * Enable plugin
      */
     public function enable(string $pluginCode): bool
     {
@@ -360,7 +313,7 @@ class PluginManager
             throw new \Exception('Plugin not found: ' . $pluginCode);
         }
 
-        // 获取插件配置
+        // Get plugin configuration
         $dbPlugin = Plugin::query()
             ->where('code', $pluginCode)
             ->first();
@@ -369,30 +322,30 @@ class PluginManager
             $plugin->setConfig(json_decode($dbPlugin->config, true));
         }
 
-        // 注册服务提供者
+        // Register service provider
         $this->registerServiceProvider($pluginCode);
 
-        // 加载路由
+        // Load routes
         $this->loadRoutes($pluginCode);
 
-        // 加载视图
+        // Load views
         $this->loadViews($pluginCode);
 
-        // 更新数据库状态
+        // Update database status
         Plugin::query()
             ->where('code', $pluginCode)
             ->update([
                 'is_enabled' => true,
                 'updated_at' => now(),
             ]);
-        // 初始化插件
+        // Initialize plugin
         $plugin->boot();
 
         return true;
     }
 
     /**
-     * 禁用插件
+     * Disable plugin
      */
     public function disable(string $pluginCode): bool
     {
@@ -414,7 +367,7 @@ class PluginManager
     }
 
     /**
-     * 卸载插件
+     * Uninstall plugin
      */
     public function uninstall(string $pluginCode): bool
     {
@@ -426,7 +379,7 @@ class PluginManager
     }
 
     /**
-     * 删除插件
+     * Delete plugin
      *
      * @param string $pluginCode
      * @return bool
@@ -434,38 +387,38 @@ class PluginManager
      */
     public function delete(string $pluginCode): bool
     {
-        // 先卸载插件
+        // First uninstall plugin
         if (Plugin::where('code', $pluginCode)->exists()) {
             $this->uninstall($pluginCode);
         }
 
         $pluginPath = $this->getPluginPath($pluginCode);
         if (!File::exists($pluginPath)) {
-            throw new \Exception('插件不存在');
+            throw new \Exception('Plugin does not exist');
         }
 
-        // 删除插件目录
+        // Delete plugin directory
         File::deleteDirectory($pluginPath);
 
         return true;
     }
 
     /**
-     * 检查依赖关系
+     * Check dependencies
      */
     protected function checkDependencies(array $requires): bool
     {
         foreach ($requires as $package => $version) {
             if ($package === 'xboard') {
-                // 检查xboard版本
-                // 实现版本比较逻辑
+                // Check xboard version
+                // Implement version comparison logic
             }
         }
         return true;
     }
 
     /**
-     * 升级插件
+     * Upgrade plugin
      *
      * @param string $pluginCode
      * @return bool
@@ -478,7 +431,7 @@ class PluginManager
             throw new \Exception('Plugin not installed: ' . $pluginCode);
         }
 
-        // 获取插件配置文件中的最新版本
+        // Get latest version from plugin config file
         $configFile = $this->getPluginPath($pluginCode) . '/config.json';
         if (!File::exists($configFile)) {
             throw new \Exception('Plugin config file not found');
@@ -505,9 +458,7 @@ class PluginManager
                 $plugin->setConfig(json_decode($dbPlugin->config, true));
             }
 
-            if (method_exists($plugin, 'update')) {
-                $plugin->update($oldVersion, $newVersion);
-            }
+            $plugin->update($oldVersion, $newVersion);
         }
 
         $dbPlugin->update([
@@ -521,7 +472,7 @@ class PluginManager
     }
 
     /**
-     * 上传插件
+     * Upload plugin
      *
      * @param \Illuminate\Http\UploadedFile $file
      * @return bool
@@ -538,7 +489,7 @@ class PluginManager
         $zip = new \ZipArchive();
 
         if ($zip->open($file->path()) !== true) {
-            throw new \Exception('无法打开插件包文件');
+            throw new \Exception('Unable to open plugin package file');
         }
 
         $zip->extractTo($extractPath);
@@ -551,7 +502,7 @@ class PluginManager
 
         if (empty($configFile)) {
             File::deleteDirectory($extractPath);
-            throw new \Exception('插件包格式错误：缺少配置文件');
+            throw new \Exception('Plugin package format error: missing configuration file');
         }
 
         $pluginPath = dirname(reset($configFile));
@@ -559,24 +510,24 @@ class PluginManager
 
         if (!$this->validateConfig($config)) {
             File::deleteDirectory($extractPath);
-            throw new \Exception('插件配置文件格式错误');
+            throw new \Exception('Plugin configuration file format error');
         }
 
         $targetPath = $this->pluginPath . '/' . Str::studly($config['code']);
         if (File::exists($targetPath)) {
             $installedConfigPath = $targetPath . '/config.json';
             if (!File::exists($installedConfigPath)) {
-                throw new \Exception('已安装插件缺少配置文件，无法判断是否可升级');
+                throw new \Exception('Installed plugin missing configuration file, cannot determine if upgrade is possible');
             }
             $installedConfig = json_decode(File::get($installedConfigPath), true);
 
             $oldVersion = $installedConfig['version'] ?? null;
             $newVersion = $config['version'] ?? null;
             if (!$oldVersion || !$newVersion) {
-                throw new \Exception('插件缺少版本号，无法判断是否可升级');
+                throw new \Exception('Plugin missing version number, cannot determine if upgrade is possible');
             }
             if (version_compare($newVersion, $oldVersion, '<=')) {
-                throw new \Exception('上传插件版本不高于已安装版本，无法升级');
+                throw new \Exception('Uploaded plugin version is not higher than installed version, cannot upgrade');
             }
 
             File::deleteDirectory($targetPath);

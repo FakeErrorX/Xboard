@@ -40,7 +40,7 @@ class PlanController extends Controller
         if ($request->input('id')) {
             $plan = Plan::find($request->input('id'));
             if (!$plan) {
-                return $this->fail([400202, '该订阅不存在']);
+                return $this->fail([400202, 'This subscription does not exist']);
             }
             
             DB::beginTransaction();
@@ -59,11 +59,11 @@ class PlanController extends Controller
             } catch (\Exception $e) {
                 DB::rollBack();
                 Log::error($e);
-                return $this->fail([500, '保存失败']);
+                return $this->fail([500, 'Save failed']);
             }
         }
         if (!Plan::create($params)) {
-            return $this->fail([500, '创建失败']);
+            return $this->fail([500, 'Create failed']);
         }
         return $this->success(true);
     }
@@ -71,15 +71,15 @@ class PlanController extends Controller
     public function drop(Request $request)
     {
         if (Order::where('plan_id', $request->input('id'))->first()) {
-            return $this->fail([400201, '该订阅下存在订单无法删除']);
+            return $this->fail([400201, 'Orders exist under this subscription and cannot be deleted']);
         }
         if (User::where('plan_id', $request->input('id'))->first()) {
-            return $this->fail([400201, '该订阅下存在用户无法删除']);
+            return $this->fail([400201, 'Users exist under this subscription and cannot be deleted']);
         }
         
         $plan = Plan::find($request->input('id'));
         if (!$plan) {
-            return $this->fail([400202, '该订阅不存在']);
+            return $this->fail([400202, 'This subscription does not exist']);
         }
         
         return $this->success($plan->delete());
@@ -95,14 +95,14 @@ class PlanController extends Controller
 
         $plan = Plan::find($request->input('id'));
         if (!$plan) {
-            return $this->fail([400202, '该订阅不存在']);
+            return $this->fail([400202, 'This subscription does not exist']);
         }
 
         try {
             $plan->update($updateData);
         } catch (\Exception $e) {
             Log::error($e);
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         }
 
         return $this->success(true);
@@ -125,7 +125,7 @@ class PlanController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         }
         return $this->success(true);
     }

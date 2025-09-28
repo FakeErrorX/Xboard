@@ -73,7 +73,7 @@ class AdminRoute
                 $router->post('/sort', [ManageController::class, 'sort']);
             });
 
-            // 节点更新接口
+            // Node update interface
             $router->group([
                 'prefix' => 'server/manage'
             ], function ($router) {
@@ -260,7 +260,7 @@ class AdminRoute
                 $router->post('upgrade', [\App\Http\Controllers\V2\Admin\PluginController::class, 'upgrade']);
             });
 
-            // 流量重置管理
+            // Traffic reset management
             $router->group([
                 'prefix' => 'traffic-reset'
             ], function ($router) {

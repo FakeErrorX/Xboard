@@ -17,14 +17,14 @@ use Illuminate\Support\Facades\Cache;
 class RegisterService
 {
     /**
-     * 验证用户注册请求
+     * Verify user registration request
      *
-     * @param Request $request 请求对象
-     * @return array [是否通过, 错误消息]
+     * @param Request $request Request object
+     * @return array [Whether passed, Error message]
      */
     public function validateRegister(Request $request): array
     {
-        // 检查IP注册限制
+        // Check IP registration limit
         if ((int) admin_setting('register_limit_by_ip_enable', 0)) {
             $registerCountByIP = Cache::get(CacheKey::get('REGISTER_IP_RATE_LIMIT', $request->ip())) ?? 0;
             if ((int) $registerCountByIP >= (int) admin_setting('register_limit_count', 3)) {
@@ -40,14 +40,14 @@ class RegisterService
             }
         }
 
-        // 检查验证码
+        // Check verification code
         $captchaService = app(CaptchaService::class);
         [$captchaValid, $captchaError] = $captchaService->verify($request);
         if (!$captchaValid) {
             return [false, $captchaError];
         }
 
-        // 检查邮箱白名单
+        // Check email whitelist
         if ((int) admin_setting('email_whitelist_enable', 0)) {
             if (
                 !Helper::emailSuffixVerify(
@@ -59,7 +59,7 @@ class RegisterService
             }
         }
 
-        // 检查Gmail限制
+        // Check Gmail restriction
         if ((int) admin_setting('email_gmail_limit_enable', 0)) {
             $prefix = explode('@', $request->input('email'))[0];
             if (strpos($prefix, '.') !== false || strpos($prefix, '+') !== false) {
@@ -67,19 +67,19 @@ class RegisterService
             }
         }
 
-        // 检查是否关闭注册
+        // Check if registration is disabled
         if ((int) admin_setting('stop_register', 0)) {
             return [false, [400, __('Registration has closed')]];
         }
 
-        // 检查邀请码要求
+        // Check invite code requirement
         if ((int) admin_setting('invite_force', 0)) {
             if (empty($request->input('invite_code'))) {
                 return [false, [422, __('You must use the invitation code to register')]];
             }
         }
 
-        // 检查邮箱验证
+        // Check email verification
         if ((int) admin_setting('email_verify', 0)) {
             if (empty($request->input('email_code'))) {
                 return [false, [422, __('Email verification code cannot be empty')]];
@@ -89,7 +89,7 @@ class RegisterService
             }
         }
 
-        // 检查邮箱是否存在
+        // Check if email exists
         $email = $request->input('email');
         $exist = User::where('email', $email)->first();
         if ($exist) {
@@ -100,10 +100,10 @@ class RegisterService
     }
 
     /**
-     * 处理邀请码
+     * Handle invite code
      *
-     * @param string $inviteCode 邀请码
-     * @return int|null 邀请人ID
+     * @param string $inviteCode Invite code
+     * @return int|null Inviter ID
      */
     public function handleInviteCode(string $inviteCode): int|null
     {
@@ -129,14 +129,14 @@ class RegisterService
 
 
     /**
-     * 注册用户
+     * Register user
      *
-     * @param Request $request 请求对象
-     * @return array [成功状态, 用户对象或错误信息]
+     * @param Request $request Request object
+     * @return array [Success status, User object or error message]
      */
     public function register(Request $request): array
     {
-        // 验证注册数据
+        // Validate registration data
         [$valid, $error] = $this->validateRegister($request);
         if (!$valid) {
             return [false, $error];
@@ -148,13 +148,13 @@ class RegisterService
         $password = $request->input('password');
         $inviteCode = $request->input('invite_code');
 
-        // 处理邀请码获取邀请人ID
+        // Handle invite code to get inviter ID
         $inviteUserId = null;
         if ($inviteCode) {
             $inviteUserId = $this->handleInviteCode($inviteCode);
         }
 
-        // 创建用户
+        // Create user
         $userService = app(UserService::class);
         $user = $userService->createUser([
             'email' => $email,
@@ -162,23 +162,23 @@ class RegisterService
             'invite_user_id' => $inviteUserId,
         ]);
 
-        // 保存用户
+        // Save user
         if (!$user->save()) {
             return [false, [500, __('Register failed')]];
         }
 
         HookManager::call('user.register.after', $user);
 
-        // 清除邮箱验证码
+        // Clear email verification code
         if ((int) admin_setting('email_verify', 0)) {
             Cache::forget(CacheKey::get('EMAIL_VERIFY_CODE', $email));
         }
 
-        // 更新最近登录时间
+        // Update last login time
         $user->last_login_at = time();
         $user->save();
 
-        // 更新IP注册计数
+        // Update IP registration count
         if ((int) admin_setting('register_limit_by_ip_enable', 0)) {
             $registerCountByIP = Cache::get(CacheKey::get('REGISTER_IP_RATE_LIMIT', $request->ip())) ?? 0;
             Cache::put(

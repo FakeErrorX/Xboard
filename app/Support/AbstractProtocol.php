@@ -7,47 +7,47 @@ use App\Services\Plugin\HookManager;
 abstract class AbstractProtocol
 {
     /**
-     * @var array 用户信息
+     * @var array User information
      */
     protected $user;
 
     /**
-     * @var array 服务器信息
+     * @var array Server information
      */
     protected $servers;
 
     /**
-     * @var string|null 客户端名称
+     * @var string|null Client name
      */
     protected $clientName;
 
     /**
-     * @var string|null 客户端版本
+     * @var string|null Client version
      */
     protected $clientVersion;
 
     /**
-     * @var array 协议标识
+     * @var array Protocol identifiers
      */
     public $flags = [];
 
     /**
-     * @var array 协议需求配置
+     * @var array Protocol requirement configuration
      */
     protected $protocolRequirements = [];
 
     /**
-     * @var array 允许的协议类型（白名单） 为空则不进行过滤
+     * @var array Allowed protocol types (whitelist) - no filtering if empty
      */
     protected $allowedProtocols = [];
 
     /**
-     * 构造函数
+     * Constructor
      *
-     * @param array $user 用户信息
-     * @param array $servers 服务器信息
-     * @param string|null $clientName 客户端名称
-     * @param string|null $clientVersion 客户端版本
+     * @param array $user User information
+     * @param array $servers Server information
+     * @param string|null $clientName Client name
+     * @param string|null $clientVersion Client version
      */
     public function __construct($user, $servers, $clientName = null, $clientVersion = null)
     {
@@ -60,7 +60,7 @@ abstract class AbstractProtocol
     }
 
     /**
-     * 获取协议标识
+     * Get protocol identifiers
      *
      * @return array
      */
@@ -70,14 +70,14 @@ abstract class AbstractProtocol
     }
 
     /**
-     * 处理请求
+     * Handle request
      *
      * @return mixed
      */
     abstract public function handle();
 
     /**
-     * 根据客户端版本过滤不兼容的服务器
+     * Filter out servers incompatible with client version
      *
      * @return array
      */
@@ -102,9 +102,9 @@ abstract class AbstractProtocol
     }
 
     /**
-     * 检查服务器是否与当前客户端兼容
+     * Check if server is compatible with current client
      *
-     * @param array $server 服务器信息
+     * @param array $server Server information
      * @return bool
      */
     protected function isCompatible($server)
@@ -126,10 +126,10 @@ abstract class AbstractProtocol
     }
 
     /**
-     * 检查版本要求
+     * Check version requirements
      *
-     * @param array $requirements 要求配置
-     * @param array $server 服务器信息
+     * @param array $requirements Requirement configuration
+     * @param array $server Server information
      * @return bool
      */
     private function checkRequirements(array $requirements, array $server): bool
@@ -184,26 +184,26 @@ abstract class AbstractProtocol
     }
 
     /**
-     * 检查当前客户端是否支持特定功能
+     * Check if current client supports specific features
      *
-     * @param string $clientName 客户端名称
-     * @param string $minVersion 最低版本要求
-     * @param array $additionalConditions 额外条件检查
+     * @param string $clientName Client name
+     * @param string $minVersion Minimum version requirement
+     * @param array $additionalConditions Additional condition checks
      * @return bool
      */
     protected function supportsFeature(string $clientName, string $minVersion, array $additionalConditions = []): bool
     {
-        // 检查客户端名称
+        // Check client name
         if ($this->clientName !== $clientName) {
             return false;
         }
 
-        // 检查版本号
+        // Check version number
         if (empty($this->clientVersion) || version_compare($this->clientVersion, $minVersion, '<')) {
             return false;
         }
 
-        // 检查额外条件
+        // Check additional conditions
         foreach ($additionalConditions as $condition) {
             if (!$condition) {
                 return false;
@@ -214,7 +214,7 @@ abstract class AbstractProtocol
     }
 
     /**
-     * 根据白名单过滤服务器
+     * Filter servers by whitelist
      *
      * @return void
      */
@@ -229,10 +229,10 @@ abstract class AbstractProtocol
     }
 
     /**
-     * 将平铺的协议需求转换为树形结构
+     * Convert flat protocol requirements to tree structure
      *
-     * @param array $flat 平铺的协议需求
-     * @return array 树形结构的协议需求
+     * @param array $flat Flat protocol requirements
+     * @return array Tree-structured protocol requirements
      */
     protected function normalizeProtocolRequirements(array $flat): array
     {

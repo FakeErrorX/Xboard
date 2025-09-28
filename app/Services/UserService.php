@@ -132,14 +132,14 @@ class UserService
     }
 
     /**
-     * 获取用户流量信息（增加重置检查）
+     * Get user traffic information (with reset check)
      */
     public function getUserTrafficInfo(User $user): array
     {
-        // 检查是否需要重置流量
+        // Check if traffic reset is needed
         app(TrafficResetService::class)->checkAndReset($user, TrafficResetLog::SOURCE_USER_ACCESS);
 
-        // 重新获取用户数据（可能已被重置）
+        // Re-fetch user data (may have been reset)
         $user->refresh();
 
         return [
@@ -156,13 +156,13 @@ class UserService
     }
 
     /**
-     * 创建用户
+     * Create user
      */
     public function createUser(array $data): User
     {
         $user = new User();
 
-        // 基本信息
+        // Basic information
         $user->email = $data['email'];
         $user->password = isset($data['password'])
             ? Hash::make($data['password'])
@@ -170,16 +170,15 @@ class UserService
         $user->uuid = Helper::guid(true);
         $user->token = Helper::guid();
 
-        // 默认设置
+        // Default settings
         $user->remind_expire = admin_setting('default_remind_expire', 1);
         $user->remind_traffic = admin_setting('default_remind_traffic', 1);
+        $user->expired_at = 0;
 
-        // 可选字段
+        // Optional fields
         $this->setOptionalFields($user, $data);
 
-        $user->expired_at = null;
-
-        // 处理计划
+        // Handle plan
         if (isset($data['plan_id'])) {
             $this->setPlanForUser($user, $data['plan_id'], $data['expired_at'] ?? null);
         } else {
@@ -190,7 +189,7 @@ class UserService
     }
 
     /**
-     * 设置可选字段
+     * Set optional fields
      */
     private function setOptionalFields(User $user, array $data): void
     {
@@ -211,7 +210,7 @@ class UserService
     }
 
     /**
-     * 为用户设置计划
+     * Set plan for user
      */
     private function setPlanForUser(User $user, int $planId, ?int $expiredAt = null): void
     {
@@ -230,12 +229,12 @@ class UserService
     }
 
     /**
-     * 为用户分配一个新套餐或续费现有套餐
+     * Assign a new plan to user or renew existing plan
      *
-     * @param User $user 用户模型
-     * @param Plan $plan 套餐模型
-     * @param int $validityDays 购买天数
-     * @return User 更新后的用户模型
+     * @param User $user User model
+     * @param Plan $plan Plan model
+     * @param int $validityDays Purchase days
+     * @return User Updated user model
      */
     public function assignPlan(User $user, Plan $plan, int $validityDays): User
     {
@@ -253,11 +252,11 @@ class UserService
     }
 
     /**
-     * 延长用户的订阅有效期
+     * Extend user subscription validity
      *
-     * @param User $user 用户模型
-     * @param int $days 延长天数
-     * @return User 更新后的用户模型
+     * @param User $user User model
+     * @param int $days Extension days
+     * @return User Updated user model
      */
     public function extendSubscription(User $user, int $days): User
     {
@@ -268,7 +267,7 @@ class UserService
     }
 
     /**
-     * 设置试用计划
+     * Set trial plan
      */
     private function setTryOutPlan(User $user): void
     {

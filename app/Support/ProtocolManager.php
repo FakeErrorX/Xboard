@@ -7,17 +7,17 @@ use Illuminate\Contracts\Container\Container;
 class ProtocolManager
 {
     /**
-     * @var Container Laravel容器实例
+     * @var Container Laravel container instance
      */
     protected $container;
 
     /**
-     * @var array 缓存的协议类列表
+     * @var array Cached protocol class list
      */
     protected $protocolClasses = [];
 
     /**
-     * 构造函数
+     * Constructor
      *
      * @param Container $container
      */
@@ -27,7 +27,7 @@ class ProtocolManager
     }
 
     /**
-     * 发现并注册所有协议类
+     * Discover and register all protocol classes
      *
      * @return self
      */
@@ -49,7 +49,7 @@ class ProtocolManager
     }
 
     /**
-     * 获取所有注册的协议类
+     * Get all registered protocol classes
      *
      * @return array
      */
@@ -63,7 +63,7 @@ class ProtocolManager
     }
 
     /**
-     * 获取所有协议的标识
+     * Get all protocol identifiers
      *
      * @return array
      */
@@ -92,14 +92,14 @@ class ProtocolManager
     }
 
     /**
-     * 根据标识匹配合适的协议处理器类名
+     * Match appropriate protocol handler class name by identifier
      *
-     * @param string $flag 请求标识
-     * @return string|null 协议类名或null
+     * @param string $flag Request identifier
+     * @return string|null Protocol class name or null
      */
     public function matchProtocolClassName(string $flag): ?string
     {
-        // 按照相反顺序，使最新定义的协议有更高优先级
+        // In reverse order, giving newer defined protocols higher priority
         foreach (array_reverse($this->getProtocolClasses()) as $protocolClassString) {
             try {
                 $reflection = new \ReflectionClass($protocolClassString);
@@ -113,7 +113,7 @@ class ProtocolManager
                 $flags = $instanceForFlags->flags;
 
                 if (collect($flags)->contains(fn($f) => stripos($flag, (string) $f) !== false)) {
-                    return $protocolClassString; // 返回类名字符串
+                    return $protocolClassString; // Return class name string
                 }
             } catch (\ReflectionException $e) {
                 report($e); // Consider logging this error
@@ -124,12 +124,12 @@ class ProtocolManager
     }
 
     /**
-     * 根据标识匹配合适的协议处理器实例 (原有逻辑，如果还需要的话)
+     * Match appropriate protocol handler instance by identifier (legacy logic, if still needed)
      *
-     * @param string $flag 请求标识
-     * @param array $user 用户信息
-     * @param array $servers 服务器列表
-     * @param array $clientInfo 客户端信息
+     * @param string $flag Request identifier
+     * @param array $user User information
+     * @param array $servers Server list
+     * @param array $clientInfo Client information
      * @return AbstractProtocol|null
      */
     public function matchProtocol($flag, $user, $servers, $clientInfo = [])
@@ -147,11 +147,11 @@ class ProtocolManager
     }
 
     /**
-     * 创建协议实例的通用方法，兼容不同版本的Laravel容器
+     * Generic method for creating protocol instances, compatible with different versions of Laravel container
      * 
-     * @param string $class 类名
-     * @param array $parameters 构造参数
-     * @return object 实例
+     * @param string $class Class name
+     * @param array $parameters Constructor parameters
+     * @return object Instance
      */
     protected function makeProtocolInstance($class, array $parameters)
     {

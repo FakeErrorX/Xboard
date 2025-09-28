@@ -92,8 +92,8 @@ class General extends AbstractProtocol
                     $config['type'] = data_get($protocol_settings, 'network_settings.header.type', 'http');
                     $config['path'] = Arr::random(data_get($protocol_settings, 'network_settings.header.request.path', ['/']));
                     $config['host'] =
-                        data_get($protocol_settings, 'network_settings.headers.Host')
-                        ? Arr::random(data_get($protocol_settings, 'network_settings.headers.Host', ['/']), )
+                        data_get($protocol_settings, 'network_settings.header.request.headers.Host')
+                        ? Arr::random(data_get($protocol_settings, 'network_settings.header.request.headers.Host', ['/']), )
                         : null;
                 }
                 break;
@@ -118,18 +118,18 @@ class General extends AbstractProtocol
     public static function buildVless($uuid, $server)
     {
         $protocol_settings = $server['protocol_settings'];
-        $host = $server['host']; //节点地址
-        $port = $server['port']; //节点端口
-        $name = $server['name']; //节点名称
+        $host = $server['host']; // Node address
+        $port = $server['port']; // Node port
+        $name = $server['name']; // Node name
 
         $config = [
-            'mode' => 'multi', //grpc传输模式
-            'security' => '', //传输层安全 tls/reality
-            'encryption' => 'none', //加密方式
-            'type' => $server['protocol_settings']['network'], //传输协议
+            'mode' => 'multi', // gRPC transport mode
+            'security' => '', // Transport layer security tls/reality
+            'encryption' => 'none', // Encryption method
+            'type' => $server['protocol_settings']['network'], // Transport protocol
             'flow' => $protocol_settings['flow'] ? $protocol_settings['flow'] : null,
         ];
-        // 处理TLS
+        // Handle TLS
         switch ($server['protocol_settings']['tls']) {
             case 1:
                 $config['security'] = "tls";
@@ -149,7 +149,7 @@ class General extends AbstractProtocol
             default:
                 break;
         }
-        // 处理传输协议
+        // Handle transport protocol
         switch ($server['protocol_settings']['network']) {
             case 'ws':
                 if ($path = data_get($protocol_settings, 'network_settings.path'))

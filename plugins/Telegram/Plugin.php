@@ -20,7 +20,7 @@ class Plugin extends AbstractPlugin
   protected array $commandConfigs = [
     '/start' => ['description' => 'Start using', 'handler' => 'handleStartCommand'],
     '/bind' => ['description' => 'Bind account', 'handler' => 'handleBindCommand'],
-    '/traffic' => ['description' => 'View traffic', 'handler' => 'handleTrafficCommand'],
+    '/traffic' => ['description' => 'Check traffic', 'handler' => 'handleTrafficCommand'],
     '/getlatesturl' => ['description' => 'Get subscription link', 'handler' => 'handleGetLatestUrlCommand'],
     '/unbind' => ['description' => 'Unbind account', 'handler' => 'handleUnbindCommand'],
   ];
@@ -47,14 +47,14 @@ class Plugin extends AbstractPlugin
 
     $payment = $order->payment;
     if (!$payment) {
-      Log::warning('Payment notification failed: Order payment method does not exist', ['order_id' => $order->id]);
+      Log::warning('Payment notification failed: Payment method associated with order does not exist', ['order_id' => $order->id]);
       return;
     }
 
     $message = sprintf(
-      "💰Payment received %s yuan\n" .
+      "💰Successfully received %s yuan\n" .
       "———————————————\n" .
-      "Payment interface: %s\n" .
+      "Payment gateway: %s\n" .
       "Payment channel: %s\n" .
       "Site order: `%s`",
       $order->total_amount / 100,
@@ -65,13 +65,13 @@ class Plugin extends AbstractPlugin
     $this->telegramService->sendMessageWithAdmin($message, true);
   }
 
-  public function sendTicketNotify(array $data): void
+  public function sendTicketNotify(Ticket $ticket): void
   {
     if (!$this->getConfig('enable_ticket_notify', true)) {
       return;
     }
 
-    [$ticket, $message] = $data;
+    $message = $ticket->messages()->latest()->first();
     $user = User::find($ticket->user_id);
     if (!$user)
       return;
@@ -86,7 +86,7 @@ class Plugin extends AbstractPlugin
     $plan = $user->plan;
     $ip = request()?->ip() ?? '';
     $region = $ip ? (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? (new \Ip2Region())->simple($ip) : 'NULL') : '';
-    $TGmessage = "📮Ticket reminder #{$ticket->id}\n———————————————\n";
+    $TGmessage = "📮Ticket Reminder #{$ticket->id}\n———————————————\n";
     $TGmessage .= "Email: `{$user->email}`\n";
     $TGmessage .= "User location: \n`{$region}`\n";
     if ($plan) {
@@ -97,7 +97,7 @@ class Plugin extends AbstractPlugin
       $TGmessage .= "Plan and traffic: \n`No plan subscribed`\n";
     }
     $TGmessage .= "Balance/Commission balance: \n`{$money}/{$affmoney}`\n";
-    $TGmessage .= "Subject: \n`{$ticket->subject}`\nContent: \n`{$message->message}`\n";
+    $TGmessage .= "Subject:\n`{$ticket->subject}`\nContent:\n`{$message->message}`\n";
     $this->telegramService->sendMessageWithAdmin($TGmessage, true);
   }
 
@@ -107,7 +107,7 @@ class Plugin extends AbstractPlugin
       $this->registerTelegramCommand($command, [$this, $config['handler']]);
     }
 
-    $this->registerReplyHandler('/(Ticket reminder #?|Ticket ID: ?)(\\d+)/', [$this, 'handleTicketReply']);
+    $this->registerReplyHandler('/(Ticket Reminder #?|Ticket ID: ?)(\\d+)/', [$this, 'handleTicketReply']);
   }
 
   public function registerTelegramCommand(string $command, callable $handler): void
@@ -156,18 +156,18 @@ class Plugin extends AbstractPlugin
   public function handleStartCommand(object $msg): void
   {
     $welcomeTitle = $this->getConfig('start_welcome_title', '🎉 Welcome to XBoard Telegram Bot!');
-    $botDescription = $this->getConfig('start_bot_description', '🤖 I am your personal assistant, I can help you: \\n• Bind your XBoard account\\n• View traffic usage\\n• Get latest subscription link\\n• Manage account binding status');
+    $botDescription = $this->getConfig('start_bot_description', '🤖 I am your dedicated assistant, I can help you:\\n• Bind your XBoard account\\n• Check traffic usage\\n• Get the latest subscription link\\n• Manage account binding status');
     $footer = $this->getConfig('start_footer', '💡 Tip: All commands need to be used in private chat');
 
     $welcomeText = $welcomeTitle . "\n\n" . $botDescription . "\n\n";
 
     $user = User::where('telegram_id', $msg->chat_id)->first();
     if ($user) {
-      $welcomeText .= "✅ You have bound account: {$user->email}\n\n";
-      $welcomeText .= $this->getConfig('start_unbind_guide', '📋 Available commands: \\n/traffic - View traffic usage\\n/getlatesturl - Get subscription link\\n/unbind - Unbind account');
+      $welcomeText .= "✅ Your account is bound: {$user->email}\n\n";
+      $welcomeText .= $this->getConfig('start_unbind_guide', '📋 Available commands:\\n/traffic - Check traffic usage\\n/getlatesturl - Get subscription link\\n/unbind - Unbind account');
     } else {
-      $welcomeText .= $this->getConfig('start_bind_guide', '🔗 Please bind your XBoard account first: \\n1. Login to your XBoard account\\n2. Copy your subscription link\\n3. Send /bind + subscription link') . "\n\n";
-      $welcomeText .= $this->getConfig('start_bind_commands', '📋 Available commands: \\n/bind [subscription link] - Bind account');
+      $welcomeText .= $this->getConfig('start_bind_guide', '🔗 Please first bind your XBoard account:\\n1. Login to your XBoard account\\n2. Copy your subscription link\\n3. Send /bind + subscription link') . "\n\n";
+      $welcomeText .= $this->getConfig('start_bind_commands', '📋 Available commands:\\n/bind [subscription link] - Bind account');
     }
 
     $welcomeText .= "\n\n" . $footer;
@@ -198,7 +198,7 @@ class Plugin extends AbstractPlugin
       ]);
 
       if (isset($msg->chat_id)) {
-        $this->telegramService->sendMessage($msg->chat_id, 'System busy, please try again later');
+        $this->telegramService->sendMessage($msg->chat_id, 'System is busy, please try again later');
       }
 
       return true;
@@ -262,13 +262,13 @@ class Plugin extends AbstractPlugin
 
     $subscribeUrl = $msg->args[0] ?? null;
     if (!$subscribeUrl) {
-      $this->sendMessage($msg, 'Parameter error, please send with subscription address');
+      $this->sendMessage($msg, 'Invalid parameters, please send with subscription URL');
       return;
     }
 
     $token = $this->extractTokenFromUrl($subscribeUrl);
     if (!$token) {
-      $this->sendMessage($msg, 'Invalid subscription address');
+      $this->sendMessage($msg, 'Invalid subscription URL');
       return;
     }
 
@@ -279,18 +279,18 @@ class Plugin extends AbstractPlugin
     }
 
     if ($user->telegram_id) {
-      $this->sendMessage($msg, 'This account has already bound a Telegram account');
+      $this->sendMessage($msg, 'This account is already bound to a Telegram account');
       return;
     }
 
     $user->telegram_id = $msg->chat_id;
     if (!$user->save()) {
-      $this->sendMessage($msg, 'Setup failed');
+      $this->sendMessage($msg, 'Setting failed');
       return;
     }
 
     HookManager::call('user.telegram.bind.after', [$user]);
-    $this->sendMessage($msg, 'Binding successful');
+    $this->sendMessage($msg, 'Successfully bound');
   }
 
   protected function extractTokenFromUrl(string $url): ?string
@@ -330,7 +330,7 @@ class Plugin extends AbstractPlugin
     $usagePercentage = $transferTotal > 0 ? ($transferUsed / $transferTotal) * 100 : 0;
 
     $text = sprintf(
-      "📊 Traffic usage\n\nUsed traffic: %s\nTotal traffic: %s\nRemaining traffic: %s\nUsage rate: %.2f%%",
+      "📊 Traffic Usage Status\n\nUsed Traffic: %s\nTotal Traffic: %s\nRemaining Traffic: %s\nUsage Rate: %.2f%%",
       Helper::transferToGB($transferUsed),
       Helper::transferToGB($transferTotal),
       Helper::transferToGB($transferRemaining),
@@ -374,7 +374,7 @@ class Plugin extends AbstractPlugin
       return;
     }
 
-    $this->sendMessage($msg, 'Unbind successful');
+    $this->sendMessage($msg, 'Successfully unbound');
   }
 
   public function handleTicketReply(object $msg, array $matches): void
@@ -385,8 +385,8 @@ class Plugin extends AbstractPlugin
     }
 
     if (!isset($matches[2]) || !is_numeric($matches[2])) {
-      Log::warning('Telegram ticket reply regex did not match ticket ID', ['matches' => $matches, 'msg' => $msg]);
-      $this->sendMessage($msg, 'Unable to identify ticket ID, please reply directly to the ticket reminder message.');
+      Log::warning('Telegram ticket reply regex failed to match ticket ID', ['matches' => $matches, 'msg' => $msg]);
+      $this->sendMessage($msg, 'Unable to identify ticket ID, please reply directly to the ticket notification message.');
       return;
     }
 

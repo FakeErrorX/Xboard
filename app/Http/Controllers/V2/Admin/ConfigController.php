@@ -58,10 +58,10 @@ class ConfigController extends Controller
         ]);
     }
     /**
-     * 获取规则模板内容
-     * 
-     * @param string $file 文件路径
-     * @return string 文件内容
+     * Get rule template content
+     *
+     * @param string $file File path
+     * @return string File content
      */
     private function getTemplateContent(string $file): string
     {
@@ -73,7 +73,7 @@ class ConfigController extends Controller
     {
         $app_url = admin_setting('app_url');
         if (blank($app_url))
-            return $this->fail([422, '请先设置站点网址']);
+            return $this->fail([422, 'Please set the site URL first']);
         $hookUrl = $app_url . '/api/v1/guest/telegram/webhook?' . http_build_query([
             'access_token' => md5(admin_setting('telegram_bot_token', $request->input('telegram_bot_token')))
         ]);
@@ -96,9 +96,9 @@ class ConfigController extends Controller
     }
 
     /**
-     * 获取配置映射数据
-     * 
-     * @return array 配置映射数组
+     * Get configuration mapping data
+     *
+     * @return array Configuration mapping array
      */
     private function getConfigMappings(): array
     {
@@ -122,8 +122,8 @@ class ConfigController extends Controller
                 'logo' => admin_setting('logo'),
                 'force_https' => (int) admin_setting('force_https', 0),
                 'stop_register' => (int) admin_setting('stop_register', 0),
-                'app_name' => admin_setting('app_name', 'XBoard'),
-                'app_description' => admin_setting('app_description', 'XBoard is best!'),
+                'app_name' => admin_setting('app_name', 'ProxyBD'),
+                'app_description' => admin_setting('app_description', 'ProxyBD is best!'),
                 'app_url' => admin_setting('app_url'),
                 'subscribe_url' => admin_setting('subscribe_url'),
                 'try_out_plan_id' => (int) admin_setting('try_out_plan_id', 0),
@@ -203,7 +203,7 @@ class ConfigController extends Controller
                 'password_limit_enable' => (bool) admin_setting('password_limit_enable', 1),
                 'password_limit_count' => admin_setting('password_limit_count', 5),
                 'password_limit_expire' => admin_setting('password_limit_expire', 60),
-                // 保持向后兼容
+                // Maintain backward compatibility
                 'recaptcha_enable' => (bool) admin_setting('captcha_enable', 0)
             ],
             'subscribe_template' => [
@@ -236,11 +236,11 @@ class ConfigController extends Controller
     }
 
     /**
-     * 格式化模板内容
-     * 
-     * @param mixed $content 模板内容
-     * @param string $format 输出格式 (json|string)
-     * @return string 格式化后的内容
+     * Format template content
+     *
+     * @param mixed $content Template content
+     * @param string $format Output format (json|string)
+     * @return string Formatted content
      */
     private function formatTemplateContent(mixed $content, string $format = 'string'): string
     {
@@ -268,10 +268,10 @@ class ConfigController extends Controller
     }
 
     /**
-     * 获取默认模板内容
-     * 
-     * @param string $type 模板类型
-     * @return string 默认模板内容
+     * Get default template content
+     *
+     * @param string $type Template type
+     * @return string Default template content
      */
     private function getDefaultTemplate(string $type): string
     {
@@ -296,11 +296,11 @@ class ConfigController extends Controller
             return '';
         }
 
-        // 按优先级查找可用的模板文件
+        // Find available template files by priority
         foreach ($fileMap[$type] as $file) {
             $content = $this->getTemplateContent($file);
             if (!empty($content)) {
-                // 对于 SingBox，需要格式化 JSON
+                // For SingBox, need to format JSON
                 if ($type === 'singbox') {
                     $decoded = json_decode($content, true);
                     if (json_last_error() === JSON_ERROR_NONE) {

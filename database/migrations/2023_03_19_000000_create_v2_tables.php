@@ -41,14 +41,14 @@ return new class extends Migration {
         if (!Schema::hasTable('v2_knowledge')) {
             Schema::create('v2_knowledge', function (Blueprint $table) {
                 $table->integer('id', true);
-                $table->char('language', 5)->comment('語言');
-                $table->string('category')->comment('分類名');
-                $table->string('title')->comment('標題');
-                $table->text('body')->comment('內容');
-                $table->integer('sort')->nullable()->comment('排序');
-                $table->boolean('show')->default(false)->comment('顯示');
-                $table->integer('created_at')->comment('創建時間');
-                $table->integer('updated_at')->comment('更新時間');
+                $table->char('language', 5)->comment('Language');
+                $table->string('category')->comment('Category name');
+                $table->string('title')->comment('Title');
+                $table->text('body')->comment('Content');
+                $table->integer('sort')->nullable()->comment('Sort order');
+                $table->boolean('show')->default(false)->comment('Show');
+                $table->integer('created_at')->comment('Created at');
+                $table->integer('updated_at')->comment('Updated at');
             });
         }
 
@@ -72,7 +72,7 @@ return new class extends Migration {
                 $table->integer('three_year_price')->nullable();
                 $table->integer('onetime_price')->nullable();
                 $table->integer('reset_price')->nullable();
-                $table->integer('reset_traffic_method')->nullable()->comment('重置流量方式:0跟随系统设置、1每月1号、2按月重置、3不重置、4每年1月1日、5按年重置');
+                $table->integer('reset_traffic_method')->nullable()->comment('Traffic reset method: null=follow system settings, 0=1st of each month, 1=monthly reset, 2=no reset, 3=1st of January, 4=yearly reset');
                 $table->integer('capacity_limit')->nullable();
                 $table->integer('created_at');
                 $table->integer('updated_at');
@@ -106,12 +106,12 @@ return new class extends Migration {
         if (!Schema::hasTable('v2_stat_server')) {
             Schema::create('v2_stat_server', function (Blueprint $table) {
                 $table->integer('id', true);
-                $table->integer('server_id')->index('server_id')->comment('节点id');
-                $table->char('server_type', 11)->comment('节点类型');
+                $table->integer('server_id')->index('server_id')->comment('Node ID');
+                $table->char('server_type', 11)->comment('Node type');
                 $table->bigInteger('u');
                 $table->bigInteger('d');
                 $table->char('record_type', 1)->comment('d day m month');
-                $table->integer('record_at')->index('record_at')->comment('记录时间');
+                $table->integer('record_at')->index('record_at')->comment('Record time');
                 $table->integer('created_at');
                 $table->integer('updated_at');
 
@@ -193,10 +193,10 @@ return new class extends Migration {
                 $table->integer('id', true);
                 $table->integer('record_at');
                 $table->char('record_type', 1);
-                $table->integer('order_count')->comment('订单数量');
-                $table->integer('order_total')->comment('订单合计');
+                $table->integer('order_count')->comment('Order count');
+                $table->integer('order_total')->comment('Order total');
                 $table->integer('commission_count');
-                $table->integer('commission_total')->comment('佣金合计');
+                $table->integer('commission_total')->comment('Commission total');
                 $table->integer('paid_count');
                 $table->integer('paid_total');
                 $table->integer('register_count');
@@ -224,7 +224,7 @@ return new class extends Migration {
                 $table->integer('created_at');
                 $table->integer('updated_at');
 
-                // 如果是不是sqlite才添加多个索引
+                // If not SQLite, add multiple indexes
                 if (config('database.default') !== 'sqlite') {
                     $table->index(['user_id', 'server_rate', 'record_at']);
                     $table->unique(['server_rate', 'user_id', 'record_at'], 'server_rate_user_id_record_at');
@@ -253,21 +253,21 @@ return new class extends Migration {
                 $table->integer('plan_id');
                 $table->integer('coupon_id')->nullable();
                 $table->integer('payment_id')->nullable();
-                $table->integer('type')->comment('1新购2续费3升级');
+                $table->integer('type')->comment('1=new purchase, 2=renewal, 3=upgrade');
                 $table->string('period');
                 $table->string('trade_no', 36)->unique('trade_no');
                 $table->string('callback_no')->nullable();
                 $table->integer('total_amount');
                 $table->integer('handling_amount')->nullable();
                 $table->integer('discount_amount')->nullable();
-                $table->integer('surplus_amount')->nullable()->comment('剩余价值');
-                $table->integer('refund_amount')->nullable()->comment('退款金额');
-                $table->integer('balance_amount')->nullable()->comment('使用余额');
-                $table->text('surplus_order_ids')->nullable()->comment('折抵订单');
-                $table->integer('status')->default(0)->comment('0待支付1开通中2已取消3已完成4已折抵');
-                $table->integer('commission_status')->default(false)->comment('0待确认1发放中2有效3无效');
+                $table->integer('surplus_amount')->nullable()->comment('Remaining value');
+                $table->integer('refund_amount')->nullable()->comment('Refund amount');
+                $table->integer('balance_amount')->nullable()->comment('Balance amount used');
+                $table->text('surplus_order_ids')->nullable()->comment('Offset orders');
+                $table->integer('status')->default(0)->comment('0=pending payment, 1=activating, 2=cancelled, 3=completed, 4=offset');
+                $table->integer('commission_status')->default(false)->comment('0 pending confirmation, 1 distributing, 2 valid, 3 invalid');
                 $table->integer('commission_balance')->default(0);
-                $table->integer('actual_commission_balance')->nullable()->comment('实际支付佣金');
+                $table->integer('actual_commission_balance')->nullable()->comment('Actual commission paid');
                 $table->integer('paid_at')->nullable();
                 $table->integer('created_at');
                 $table->integer('updated_at');
@@ -334,8 +334,8 @@ return new class extends Migration {
                 $table->integer('user_id');
                 $table->string('subject');
                 $table->integer('level');
-                $table->integer('status')->default(0)->comment('0:已开启 1:已关闭');
-                $table->integer('reply_status')->default(1)->comment('0:待回复 1:已回复');
+                $table->integer('status')->default(0)->comment('0: open 1: closed');
+                $table->integer('reply_status')->default(1)->comment('0: awaiting reply 1: replied');
                 $table->integer('created_at');
                 $table->integer('updated_at');
             });
@@ -391,19 +391,19 @@ return new class extends Migration {
         // Server Trojan
         if (!Schema::hasTable('v2_server_trojan')) {
             Schema::create('v2_server_trojan', function (Blueprint $table) {
-                $table->integer('id', true)->comment('节点ID');
-                $table->string('group_id')->comment('节点组');
+                $table->integer('id', true)->comment('Node ID');
+                $table->string('group_id')->comment('Node group');
                 $table->string('route_id')->nullable();
-                $table->integer('parent_id')->nullable()->comment('父节点');
-                $table->string('tags')->nullable()->comment('节点标签');
-                $table->string('name')->comment('节点名称');
-                $table->string('rate', 11)->comment('倍率');
-                $table->string('host')->comment('主机名');
-                $table->string('port', 11)->comment('连接端口');
-                $table->integer('server_port')->comment('服务端口');
-                $table->boolean('allow_insecure')->default(false)->comment('是否允许不安全');
+                $table->integer('parent_id')->nullable()->comment('Parent node');
+                $table->string('tags')->nullable()->comment('Node tags');
+                $table->string('name')->comment('Node name');
+                $table->string('rate', 11)->comment('Rate multiplier');
+                $table->string('host')->comment('Hostname');
+                $table->string('port', 11)->comment('Connection port');
+                $table->integer('server_port')->comment('Server port');
+                $table->boolean('allow_insecure')->default(false)->comment('Allow insecure connections');
                 $table->string('server_name')->nullable();
-                $table->boolean('show')->default(false)->comment('是否显示');
+                $table->boolean('show')->default(false)->comment('Visibility status');
                 $table->integer('sort')->nullable();
                 $table->integer('created_at');
                 $table->integer('updated_at');

@@ -55,20 +55,20 @@ class CouponController extends Controller
             'id' => 'required|numeric',
             'show' => 'nullable|boolean'
         ], [
-            'id.required' => '优惠券ID不能为空',
-            'id.numeric' => '优惠券ID必须为数字'
+            'id.required' => 'Coupon ID cannot be empty',
+            'id.numeric' => 'Coupon ID must be numeric'
         ]);
         try {
             DB::beginTransaction();
             $coupon = Coupon::find($request->input('id'));
             if (!$coupon) {
-                throw new ApiException(400201, '优惠券不存在');
+                throw new ApiException(400201, 'Coupon does not exist');
             }
             $coupon->update($params);
             DB::commit();
         } catch (\Exception $e) {
             \Log::error($e);
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         }
     }
 
@@ -77,16 +77,16 @@ class CouponController extends Controller
         $request->validate([
             'id' => 'required|numeric'
         ], [
-            'id.required' => '优惠券ID不能为空',
-            'id.numeric' => '优惠券ID必须为数字'
+            'id.required' => 'Coupon ID cannot be empty',
+            'id.numeric' => 'Coupon ID must be numeric'
         ]);
         $coupon = Coupon::find($request->input('id'));
         if (!$coupon) {
-            return $this->fail([400202, '优惠券不存在']);
+            return $this->fail([400202, 'Coupon does not exist']);
         }
         $coupon->show = !$coupon->show;
         if (!$coupon->save()) {
-            return $this->fail([500, '保存失败']);
+            return $this->fail([500, 'Save failed']);
         }
         return $this->success(true);
     }
@@ -104,14 +104,14 @@ class CouponController extends Controller
                 $params['code'] = Helper::randomChar(8);
             }
             if (!Coupon::create($params)) {
-                return $this->fail([500, '创建失败']);
+                return $this->fail([500, 'Create failed']);
             }
         } else {
             try {
                 Coupon::find($request->input('id'))->update($params);
             } catch (\Exception $e) {
                 \Log::error($e);
-                return $this->fail([500, '保存失败']);
+                return $this->fail([500, 'Save failed']);
             }
         }
 
@@ -148,18 +148,18 @@ class CouponController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->fail([500, '生成失败']);
+            return $this->fail([500, 'Generation failed']);
         }
 
-        $data = "名称,类型,金额或比例,开始时间,结束时间,可用次数,可用于订阅,券码,生成时间\r\n";
+        $data = "Name,Type,Amount or Percentage,Start Time,End Time,Usage Limit,Available for Subscription,Coupon Code,Created Time\r\n";
         foreach ($coupons as $coupon) {
-            $type = ['', '金额', '比例'][$coupon['type']];
+            $type = ['', 'Amount', 'Percentage'][$coupon['type']];
             $value = ['', ($coupon['value'] / 100), $coupon['value']][$coupon['type']];
             $startTime = date('Y-m-d H:i:s', $coupon['started_at']);
             $endTime = date('Y-m-d H:i:s', $coupon['ended_at']);
-            $limitUse = $coupon['limit_use'] ?? '不限制';
+            $limitUse = $coupon['limit_use'] ?? 'Unlimited';
             $createTime = date('Y-m-d H:i:s', $coupon['created_at']);
-            $limitPlanIds = isset($coupon['limit_plan_ids']) ? implode("/", $coupon['limit_plan_ids']) : '不限制';
+            $limitPlanIds = isset($coupon['limit_plan_ids']) ? implode("/", $coupon['limit_plan_ids']) : 'Unlimited';
             $data .= "{$coupon['name']},{$type},{$value},{$startTime},{$endTime},{$limitUse},{$limitPlanIds},{$coupon['code']},{$createTime}\r\n";
         }
         echo $data;
@@ -170,15 +170,15 @@ class CouponController extends Controller
         $request->validate([
             'id' => 'required|numeric'
         ], [
-            'id.required' => '优惠券ID不能为空',
-            'id.numeric' => '优惠券ID必须为数字'
+            'id.required' => 'Coupon ID cannot be empty',
+            'id.numeric' => 'Coupon ID must be numeric'
         ]);
         $coupon = Coupon::find($request->input('id'));
         if (!$coupon) {
-            return $this->fail([400202, '优惠券不存在']);
+            return $this->fail([400202, 'Coupon does not exist']);
         }
         if (!$coupon->delete()) {
-            return $this->fail([500, '删除失败']);
+            return $this->fail([500, 'Delete failed']);
         }
 
         return $this->success(true);

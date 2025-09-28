@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     /**
-     * 旧的价格字段到新周期的映射关系
+     * Old price field to new period mapping
      */
     private const PERIOD_MAPPING = [
         'month_price' => 'monthly',
@@ -24,14 +24,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        // 批量更新订单的周期字段
+        // Batch update order period fields
         foreach (self::PERIOD_MAPPING as $oldPeriod => $newPeriod) {
             DB::table('v2_order')
                 ->where('period', $oldPeriod)
                 ->update(['period' => $newPeriod]);
         }
 
-        // 检查是否还有未转换的记录
+        // Check if there are still unconverted records
         $unconvertedCount = DB::table('v2_order')
             ->whereNotIn('period', array_values(self::PERIOD_MAPPING))
             ->count();
@@ -46,7 +46,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        // 回滚操作 - 将新的周期值转换回旧的价格字段名
+        // Rollback operation - convert new period values back to old price field names
         foreach (self::PERIOD_MAPPING as $oldPeriod => $newPeriod) {
             DB::table('v2_order')
                 ->where('period', $newPeriod)

@@ -29,13 +29,13 @@ class SystemController extends Controller
     }
 
     /**
-     * 获取日志统计信息
-     * 
-     * @return array 各级别日志的数量统计
+     * Get log statistics information
+     *
+     * @return array Log count statistics by level
      */
     protected function getLogStatistics(): array
     {
-        // 初始化日志统计数组
+        // Initialize log statistics array
         $statistics = [
             'info' => 0,
             'warning' => 0,
@@ -177,7 +177,7 @@ class SystemController extends Controller
     }
 
     /**
-     * 清除系统日志
+     * Clear system logs
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -189,43 +189,43 @@ class SystemController extends Controller
             'level' => 'string|in:info,warning,error,all',
             'limit' => 'integer|min:100|max:10000'
         ], [
-            'days.required' => '请指定要清除多少天前的日志',
-            'days.integer' => '天数必须为整数',
-            'days.min' => '天数不能少于1天',
-            'days.max' => '天数不能超过365天',
-            'level.in' => '日志级别只能是：info、warning、error、all',
-            'limit.min' => '单次清除数量不能少于100条',
-            'limit.max' => '单次清除数量不能超过10000条'
+            'days.required' => 'Please specify how many days of logs to clear',
+            'days.integer' => 'Days must be an integer',
+            'days.min' => 'Days cannot be less than 1 day',
+            'days.max' => 'Days cannot exceed 365 days',
+            'level.in' => 'Log level can only be: info, warning, error, all',
+            'limit.min' => 'Single clear count cannot be less than 100',
+            'limit.max' => 'Single clear count cannot exceed 10000'
         ]);
 
-        $days = $request->input('days', 30); // 默认清除30天前的日志
-        $level = $request->input('level', 'all'); // 默认清除所有级别
-        $limit = $request->input('limit', 1000); // 默认单次清除1000条
+        $days = $request->input('days', 30); // Default clear logs from 30 days ago
+        $level = $request->input('level', 'all'); // Default clear all levels
+        $limit = $request->input('limit', 1000); // Default single clear 1000 records
 
         try {
             $cutoffDate = now()->subDays($days);
 
-            // 构建查询条件
+            // Build query conditions
             $query = LogModel::where('created_at', '<', $cutoffDate->timestamp);
 
             if ($level !== 'all') {
                 $query->where('level', strtoupper($level));
             }
 
-            // 获取要删除的记录数量
+            // Get the number of records to delete
             $totalCount = $query->count();
 
             if ($totalCount === 0) {
                 return $this->success([
-                    'message' => '没有找到符合条件的日志记录',
+                    'message' => 'No log records found matching the criteria',
                     'deleted_count' => 0,
                     'total_count' => $totalCount
                 ]);
             }
 
-            // 分批删除，避免单次删除过多数据
+            // Batch delete to avoid deleting too much data at once
             $deletedCount = 0;
-            $batchSize = min($limit, 1000); // 每批最多1000条
+            $batchSize = min($limit, 1000); // Maximum 1000 records per batch
 
             while ($deletedCount < $limit && $deletedCount < $totalCount) {
                 $remainingLimit = min($batchSize, $limit - $deletedCount);
@@ -244,26 +244,26 @@ class SystemController extends Controller
                 $batchDeleted = LogModel::whereIn('id', $idsToDelete)->delete();
                 $deletedCount += $batchDeleted;
 
-                // 避免长时间占用数据库连接
-                if ($deletedCount < $limit && $deletedCount < $totalCount) {
-                    usleep(100000); // 暂停0.1秒
+                                // Avoid long database connection occupation
+                if ($deletedCount % 5000 === 0) {
+                    usleep(100000); // Pause for 0.1 seconds
                 }
             }
 
             return $this->success([
-                'message' => '日志清除完成',
+                'message' => 'Log clearing completed',
                 'deleted_count' => $deletedCount,
                 'total_count' => $totalCount,
                 'remaining_count' => max(0, $totalCount - $deletedCount)
             ]);
 
         } catch (\Exception $e) {
-            return $this->fail(ResponseEnum::HTTP_ERROR, null, '清除日志失败：' . $e->getMessage());
+            return $this->fail(ResponseEnum::HTTP_ERROR, null, 'Failed to clear logs: ' . $e->getMessage());
         }
     }
 
     /**
-     * 获取日志清除统计信息
+     * Get log clearing statistics information
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -294,7 +294,7 @@ class SystemController extends Controller
             return $this->success($stats);
 
         } catch (\Exception $e) {
-            return $this->fail(ResponseEnum::HTTP_ERROR, null, '获取统计信息失败：' . $e->getMessage());
+            return $this->fail(ResponseEnum::HTTP_ERROR, null, 'Failed to get statistics: ' . $e->getMessage());
         }
     }
 }

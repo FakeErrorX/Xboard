@@ -1,18 +1,18 @@
 window.routerBase = 'http://127.0.0.1:8000/'
 window.settings = {
-  // 站点名称
+  // Site Name
   title: 'Xboard',
-  // 主题色
+  // Theme Color
   theme: {
-    color: 'anyway', //可选default、blue、black、、darkblue
+    color: 'anyway', //Optional default, blue, black, darkblue
   },
-  // 站点描述
+  // Site Description
   description: 'Xboard',
   assets_path: '/assets',
-  // 版本号
+  // Version Number
   version: '0.1.1-dev',
-  // 登陆背景
+  // Login Background
   background_url: '',
-  // 站点LOGO
+  // Site LOGO
   logo: '',
 }

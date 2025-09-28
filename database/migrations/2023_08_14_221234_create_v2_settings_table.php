@@ -15,10 +15,10 @@ class CreateV2SettingsTable extends Migration
     {
         Schema::create('v2_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('group')->comment('设置分组')->nullable();
-            $table->string('type')->comment('设置类型')->nullable();
-            $table->string('name')->comment('设置名称')->uniqid();
-            $table->string('value')->comment('设置值')->nullable();
+            $table->string('group')->comment('Settings group')->nullable();
+            $table->string('type')->comment('Settings type')->nullable();
+            $table->string('name')->comment('Settings name')->uniqid();
+            $table->string('value')->comment('Settings value')->nullable();
             $table->timestamps();
         });
     }

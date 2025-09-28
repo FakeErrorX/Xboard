@@ -18,7 +18,7 @@ class Stash extends AbstractProtocol
         Server::TYPE_HYSTERIA,
         Server::TYPE_TROJAN,
         Server::TYPE_TUIC,
-            // Server::TYPE_ANYTLS,
+        // Server::TYPE_ANYTLS,
         Server::TYPE_SOCKS,
         Server::TYPE_HTTP,
     ];
@@ -29,7 +29,7 @@ class Stash extends AbstractProtocol
             ],
             'vless' => [
                 'protocol_settings.tls' => [
-                    '2' => '3.1.0'  // Reality 在3.1.0版本中添加
+                    '2' => '3.1.0'  // Reality added in version 3.1.0
                 ],
                 'protocol_settings.flow' => [
                     'xtls-rprx-vision' => '3.1.0',
@@ -39,18 +39,18 @@ class Stash extends AbstractProtocol
                 'base_version' => '2.0.0',
                 'protocol_settings.version' => [
                     '1' => '2.0.0', // Hysteria 1
-                    '2' => '2.5.0'  // Hysteria 2，2.5.0 版本开始支持（2023年11月8日）
+                    '2' => '2.5.0'  // Hysteria 2, supported starting from version 2.5.0 (November 8, 2023)
                 ],
                 // 'protocol_settings.ports' => [
-                //     'true' => '2.6.4' // Hysteria 2 端口跳转功能于2.6.4版本支持（2024年8月4日）
+                //     'true' => '2.6.4' // Hysteria 2 port hopping feature supported in version 2.6.4 (August 4, 2024)
                 // ]
             ],
             'tuic' => [
-                'base_version' => '2.3.0' // TUIC 协议自身需要 2.3.0+
+                'base_version' => '2.3.0' // TUIC protocol itself requires 2.3.0+
             ],
             'shadowsocks' => [
                 'base_version' => '2.0.0',
-                // ShadowSocks2022 在3.0.0版本中添加（2025年4月2日）
+                // ShadowSocks2022 added in version 3.0.0 (April 2, 2025)
                 'protocol_settings.cipher' => [
                     '2022-blake3-aes-128-gcm' => '3.0.0',
                     '2022-blake3-aes-256-gcm' => '3.0.0',
@@ -58,13 +58,13 @@ class Stash extends AbstractProtocol
                 ]
             ],
             'shadowtls' => [
-                'base_version' => '3.0.0' // ShadowTLS 在3.0.0版本中添加（2025年4月2日）
+                'base_version' => '3.0.0' // ShadowTLS added in version 3.0.0 (April 2, 2025)
             ],
             'ssh' => [
-                'base_version' => '2.6.4' // SSH 协议在2.6.4中添加（2024年8月4日）
+                'base_version' => '2.6.4' // SSH protocol added in version 2.6.4 (August 4, 2024)
             ],
             'juicity' => [
-                'base_version' => '2.6.4' // Juicity 协议在2.6.4中添加（2024年8月4日）
+                'base_version' => '2.6.4' // Juicity protocol added in version 2.6.4 (August 4, 2024)
             ]
         ]
     ];
@@ -187,7 +187,7 @@ class Stash extends AbstractProtocol
             $pluginOpts = data_get($protocol_settings, 'plugin_opts', '');
             $array['plugin'] = $plugin;
 
-            // 解析插件选项
+            // Parse plugin options
             $parsedOpts = collect(explode(';', $pluginOpts))
                 ->filter()
                 ->mapWithKeys(function ($pair) {
@@ -199,7 +199,7 @@ class Stash extends AbstractProtocol
                 })
                 ->all();
 
-            // 根据插件类型进行字段映射
+            // Map fields based on plugin type
             switch ($plugin) {
                 case 'obfs':
                     $array['plugin-opts'] = [
@@ -207,7 +207,7 @@ class Stash extends AbstractProtocol
                         'host' => $parsedOpts['obfs-host'],
                     ];
 
-                    // 可选path参数
+                    // Optional path parameter
                     if (isset($parsedOpts['path'])) {
                         $array['plugin-opts']['path'] = $parsedOpts['path'];
                     }
@@ -223,7 +223,7 @@ class Stash extends AbstractProtocol
                     break;
 
                 default:
-                    // 对于其他插件，直接使用解析出的键值对
+                    // For other plugins, directly use the parsed key-value pairs
                     $array['plugin-opts'] = $parsedOpts;
             }
         }
@@ -253,6 +253,9 @@ class Stash extends AbstractProtocol
             case 'tcp':
                 $array['network'] = data_get($protocol_settings, 'network_settings.header.type', 'http');
                 $array['http-opts']['path'] = data_get($protocol_settings, 'network_settings.header.request.path', ['/']);
+                if ($host = data_get($protocol_settings, 'network_settings.header.request.headers.Host')) {
+                    $array['http-opts']['headers']['Host'] = $host;
+                }
                 break;
             case 'ws':
                 $array['network'] = 'ws';
@@ -295,16 +298,29 @@ class Stash extends AbstractProtocol
                 break;
             case 2:
                 $array['tls'] = true;
+                if ($serverName = data_get($protocol_settings, 'reality_settings.server_name')) {
+                    $array['servername'] = $serverName;
+                    $array['sni'] = $serverName;
+                }
+                $array['flow'] = data_get($protocol_settings, 'flow');
                 $array['reality-opts'] = [
                     'public-key' => data_get($protocol_settings, 'reality_settings.public_key'),
                     'short-id' => data_get($protocol_settings, 'reality_settings.short_id')
                 ];
+                break;
         }
 
         switch (data_get($protocol_settings, 'network')) {
             case 'tcp':
-                $array['network'] = data_get($protocol_settings, 'network_settings.header.type');
-                $array['http-opts']['path'] = data_get($protocol_settings, 'network_settings.header.request.path', ['/']);
+                if ($headerType = data_get($protocol_settings, 'network_settings.header.type', 'tcp') != 'tcp') {
+                    $array['network'] = $headerType;
+                    if ($httpOpts = array_filter([
+                        'headers' => data_get($protocol_settings, 'network_settings.header.request.headers'),
+                        'path' => data_get($protocol_settings, 'network_settings.header.request.path', ['/'])
+                    ])) {
+                        $array['http-opts'] = $httpOpts;
+                    }
+                }
                 break;
             case 'ws':
                 $array['network'] = 'ws';
@@ -317,11 +333,11 @@ class Stash extends AbstractProtocol
                 $array['network'] = 'grpc';
                 $array['grpc-opts']['grpc-service-name'] = data_get($protocol_settings, 'network_settings.serviceName');
                 break;
-            // case 'h2':
-            //     $array['network'] = 'h2';
-            //     $array['h2-opts']['host'] = data_get($protocol_settings, 'network_settings.host');
-            //     $array['h2-opts']['path'] = data_get($protocol_settings, 'network_settings.path');
-            //     break;
+                // case 'h2':
+                //     $array['network'] = 'h2';
+                //     $array['h2-opts']['host'] = data_get($protocol_settings, 'network_settings.host');
+                //     $array['h2-opts']['path'] = data_get($protocol_settings, 'network_settings.path');
+                //     break;
         }
 
         return $array;
@@ -345,7 +361,9 @@ class Stash extends AbstractProtocol
             case 'ws':
                 $array['network'] = 'ws';
                 $array['ws-opts']['path'] = data_get($protocol_settings, 'network_settings.path');
-                $array['ws-opts']['headers'] = data_get($protocol_settings, 'network_settings.headers.Host') ? ['Host' => data_get($protocol_settings, 'network_settings.headers.Host')] : null;
+                if ($host = data_get($protocol_settings, 'network_settings.headers.Host')) {
+                    $array['ws-opts']['headers'] = ['Host' => $host];
+                }
                 break;
         }
         if ($serverName = data_get($protocol_settings, 'server_name')) {
@@ -384,7 +402,6 @@ class Stash extends AbstractProtocol
                 break;
         }
         return $array;
-
     }
 
     public static function buildTuic($password, $server)
@@ -405,6 +422,7 @@ class Stash extends AbstractProtocol
             'heartbeat-interval' => 10000,
             'request-timeout' => 8000,
             'max-udp-relay-packet-size' => 1500,
+            'version' => data_get($protocol_settings, 'version', 5),
         ];
 
         $array['skip-cert-verify'] = (bool) data_get($protocol_settings, 'tls.allow_insecure', false);

@@ -9,18 +9,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * App\Models\GiftCardUsage
  *
  * @property int $id
- * @property int $code_id 兑换码ID
- * @property int $template_id 模板ID
- * @property int $user_id 使用用户ID
- * @property int|null $invite_user_id 邀请人ID
- * @property array $rewards_given 实际发放的奖励
- * @property array|null $invite_rewards 邀请人获得的奖励
- * @property int|null $user_level_at_use 使用时用户等级
- * @property int|null $plan_id_at_use 使用时用户套餐ID
- * @property float $multiplier_applied 应用的倍率
- * @property string|null $ip_address 使用IP地址
- * @property string|null $user_agent 用户代理
- * @property string|null $notes 备注
+ * @property int $code_id Gift card code ID
+ * @property int $template_id Template ID
+ * @property int $user_id User ID who used it
+ * @property int|null $invite_user_id Inviter ID
+ * @property array $rewards_given Actual rewards given
+ * @property array|null $invite_rewards Rewards for inviter
+ * @property int|null $user_level_at_use User level at use time
+ * @property int|null $plan_id_at_use User plan ID at use time
+ * @property float $multiplier_applied Applied multiplier
+ * @property string|null $ip_address IP address used
+ * @property string|null $user_agent User agent
+ * @property string|null $notes Notes
  * @property int $created_at
  */
 class GiftCardUsage extends Model
@@ -53,7 +53,7 @@ class GiftCardUsage extends Model
     ];
 
     /**
-     * 关联兑换码
+     * Relationship with gift card code
      */
     public function code(): BelongsTo
     {
@@ -61,7 +61,7 @@ class GiftCardUsage extends Model
     }
 
     /**
-     * 关联模板
+     * Relationship with template
      */
     public function template(): BelongsTo
     {
@@ -69,7 +69,7 @@ class GiftCardUsage extends Model
     }
 
     /**
-     * 关联使用用户
+     * Relationship with user
      */
     public function user(): BelongsTo
     {
@@ -77,7 +77,7 @@ class GiftCardUsage extends Model
     }
 
     /**
-     * 关联邀请人
+     * Relationship with inviter
      */
     public function inviteUser(): BelongsTo
     {
@@ -85,7 +85,7 @@ class GiftCardUsage extends Model
     }
 
     /**
-     * 创建使用记录
+     * Create usage record
      */
     public static function createRecord(
         GiftCardCode $code,

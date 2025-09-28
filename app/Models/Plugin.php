@@ -28,7 +28,7 @@ class Plugin extends Model
     const TYPE_FEATURE = 'feature';
     const TYPE_PAYMENT = 'payment';
 
-    // 默认不可删除的插件列表
+    // List of plugins that cannot be deleted by default
     const PROTECTED_PLUGINS = [
         'epay',           // EPay
         'alipay_f2f',     // Alipay F2F
@@ -36,10 +36,8 @@ class Plugin extends Model
         'coinbase',       // Coinbase
         'coin_payments',  // CoinPayments
         'mgate',          // MGate
-        'smogate',        // Smogate
         'telegram',       // Telegram
         'uddoktapay',     // UddoktaPay
-        'piprapay',       // PipraPay
     ];
 
     protected $guarded = [

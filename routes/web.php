@@ -40,23 +40,23 @@ Route::get('/', function (Request $request) {
         }
 
         if (!$themeService->getThemeViewPath($theme)) {
-            throw new Exception('主题视图文件不存在');
+            throw new Exception('Theme view file does not exist');
         }
 
         $publicThemePath = public_path('theme/' . $theme);
         if (!File::exists($publicThemePath)) {
             $themePath = $themeService->getThemePath($theme);
             if (!$themePath || !File::copyDirectory($themePath, $publicThemePath)) {
-                throw new Exception('主题初始化失败');
+                throw new Exception('Theme initialization failed');
             }
             Log::info('Theme initialized in public directory', ['theme' => $theme]);
         }
 
         $renderParams = [
-            'title' => admin_setting('app_name', 'Xboard'),
+            'title' => admin_setting('app_name', 'ProxyBD'),
             'theme' => $theme,
             'version' => app(UpdateService::class)->getCurrentVersion(),
-            'description' => admin_setting('app_description', 'Xboard is best'),
+            'description' => admin_setting('app_description', 'BDIX Bypass Service'),
             'logo' => admin_setting('logo'),
             'theme_config' => $themeService->getConfig($theme)
         ];
@@ -66,14 +66,14 @@ Route::get('/', function (Request $request) {
             'theme' => $theme,
             'error' => $e->getMessage()
         ]);
-        abort(500, '主题加载失败');
+        abort(500, 'Theme loading failed');
     }
 });
 
-//TODO:: 兼容
+//TODO:: Compatibility
 Route::get('/' . admin_setting('secure_path', admin_setting('frontend_admin_path', hash('crc32b', config('app.key')))), function () {
     return view('admin', [
-        'title' => admin_setting('app_name', 'XBoard'),
+        'title' => admin_setting('app_name', 'ProxyBD'),
         'theme_sidebar' => admin_setting('frontend_theme_sidebar', 'light'),
         'theme_header' => admin_setting('frontend_theme_header', 'dark'),
         'theme_color' => admin_setting('frontend_theme_color', 'default'),

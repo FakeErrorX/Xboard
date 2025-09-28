@@ -259,23 +259,23 @@ return new class extends Migration {
     {
         // Recreate old tables
         Schema::create('v2_server_trojan', function (Blueprint $table) {
-            $table->integer('id', true)->comment('节点ID');
-            $table->string('group_id')->comment('节点组');
+            $table->integer('id', true)->comment('Node ID');
+            $table->string('group_id')->comment('Node group');
             $table->string('route_id')->nullable();
             $table->string('ips')->nullable();
             $table->string('excludes')->nullable();
-            $table->integer('parent_id')->nullable()->comment('父节点');
-            $table->string('tags')->nullable()->comment('节点标签');
-            $table->string('name')->comment('节点名称');
-            $table->string('rate', 11)->comment('倍率');
-            $table->string('host')->comment('主机名');
-            $table->string('port', 11)->comment('连接端口');
-            $table->integer('server_port')->comment('服务端口');
-            $table->boolean('allow_insecure')->default(false)->comment('是否允许不安全');
+            $table->integer('parent_id')->nullable()->comment('Parent node');
+            $table->string('tags')->nullable()->comment('Node tags');
+            $table->string('name')->comment('Node name');
+            $table->string('rate', 11)->comment('Rate multiplier');
+            $table->string('host')->comment('Hostname');
+            $table->string('port', 11)->comment('Connection port');
+            $table->integer('server_port')->comment('Server port');
+            $table->boolean('allow_insecure')->default(false)->comment('Allow insecure connections');
             $table->string('server_name')->nullable();
             $table->string('network')->nullable();
             $table->text('networkSettings')->nullable();
-            $table->boolean('show')->default(false)->comment('是否显示');
+            $table->boolean('show')->default(false)->comment('Visibility status');
             $table->integer('sort')->nullable();
             $table->integer('created_at');
             $table->integer('updated_at');
@@ -366,8 +366,8 @@ return new class extends Migration {
             $table->string('rate', 11);
             $table->boolean('show')->default(false);
             $table->integer('sort')->nullable();
-            $table->tinyInteger('version', false, true)->default(1)->comment('hysteria版本,Version:1\2');
-            $table->boolean('is_obfs')->default(true)->comment('是否开启obfs');
+            $table->tinyInteger('version', false, true)->default(1)->comment('Hysteria version, Version:1\2');
+            $table->boolean('is_obfs')->default(true)->comment('Enable obfs');
             $table->string('alpn')->nullable();
             $table->integer('up_mbps');
             $table->integer('down_mbps');
@@ -430,7 +430,7 @@ return new class extends Migration {
                     ]);
                     break;
                 case 'vless':
-                    // 处理 reality settings
+                    // Handle reality settings
                     $tlsSettings = $settings['tls_settings'] ?? new \stdClass();
                     if (isset($settings['reality_settings'])) {
                         $tlsSettings = array_merge((array) $tlsSettings, [

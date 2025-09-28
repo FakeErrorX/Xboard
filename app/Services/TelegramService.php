@@ -97,7 +97,7 @@ class TelegramService
     }
 
     /**
-     * Get current registered command list
+     * Get currently registered command list
      */
     public function getMyCommands(): object
     {

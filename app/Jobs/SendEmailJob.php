@@ -35,8 +35,8 @@ class SendEmailJob implements ShouldQueue
     public function handle()
     {
         $mailLog = MailService::sendEmail($this->params);
-        if($mailLog['error']){
-            $this->release(); //发送失败将触发重试
+        if ($mailLog['error']) {
+            $this->release(); //Send failure will trigger retry
         }
     }
 }

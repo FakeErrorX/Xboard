@@ -15,7 +15,7 @@ class PluginConfigService
     }
 
     /**
-     * 获取插件配置
+     * Get plugin configuration
      *
      * @param string $pluginCode
      * @return array
@@ -44,7 +44,7 @@ class PluginConfigService
     }
 
     /**
-     * 更新插件配置
+     * Update plugin configuration
      *
      * @param string $pluginCode
      * @param array $config
@@ -54,7 +54,7 @@ class PluginConfigService
     {
         $defaultConfig = $this->getDefaultConfig($pluginCode);
         if (empty($defaultConfig)) {
-            throw new \Exception('插件配置结构不存在');
+            throw new \Exception('Plugin configuration structure does not exist');
         }
         $values = [];
         foreach ($config as $key => $value) {
@@ -74,7 +74,7 @@ class PluginConfigService
     }
 
     /**
-     * 获取插件默认配置
+     * Get plugin default configuration
      *
      * @param string $pluginCode
      * @return array
@@ -91,7 +91,7 @@ class PluginConfigService
     }
 
     /**
-     * 获取数据库中的配置
+     * Get configuration from database
      *
      * @param string $pluginCode
      * @return array

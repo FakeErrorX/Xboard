@@ -30,7 +30,7 @@ class AuthController extends Controller
     }
 
     /**
-     * 通过邮件链接登录
+     * Login through email link
      */
     public function loginWithMailLink(Request $request)
     {
@@ -52,7 +52,7 @@ class AuthController extends Controller
     }
 
     /**
-     * 用户注册
+     * User registration
      */
     public function register(AuthRegister $request)
     {
@@ -67,7 +67,7 @@ class AuthController extends Controller
     }
 
     /**
-     * 用户登录
+     * User login
      */
     public function login(AuthLogin $request)
     {
@@ -85,11 +85,11 @@ class AuthController extends Controller
     }
 
     /**
-     * 通过token登录
+     * Login through token
      */
     public function token2Login(Request $request)
     {
-        // 处理直接通过token重定向
+        // Handle direct token redirect
         if ($token = $request->input('token')) {
             $redirect = '/#/login?verify=' . $token . '&redirect=' . ($request->input('redirect', 'dashboard'));
 
@@ -100,7 +100,7 @@ class AuthController extends Controller
             );
         }
 
-        // 处理通过验证码登录
+        // Handle login via verification code
         if ($verify = $request->input('verify')) {
             $userId = $this->mailLinkService->handleTokenLogin($verify);
 
@@ -131,7 +131,7 @@ class AuthController extends Controller
     }
 
     /**
-     * 获取快速登录URL
+     * Get quick login URL
      */
     public function getQuickLoginUrl(Request $request)
     {
@@ -156,7 +156,7 @@ class AuthController extends Controller
     }
 
     /**
-     * 忘记密码处理
+     * Forgot password handler
      */
     public function forget(AuthForget $request)
     {

@@ -28,7 +28,7 @@ class ExportV2Log extends Command
         $fileName = "v2_logs_" . Carbon::now()->format('Y_m_d_His') . ".csv";
         $handle = fopen(storage_path("logs/$fileName"), 'w');
 
-        // 根据您的表结构
+        // Based on your table structure
         fputcsv($handle, ['Level', 'ID', 'Title', 'Host', 'URI', 'Method', 'Data', 'IP', 'Context', 'Created At', 'Updated At']);
 
         foreach ($logs as $log) {
@@ -48,6 +48,6 @@ class ExportV2Log extends Command
         }
 
         fclose($handle);
-        $this->info("日志成功导出到：  " . storage_path("logs/$fileName"));
+        $this->info("Log successfully exported to: " . storage_path("logs/$fileName"));
     }
 }

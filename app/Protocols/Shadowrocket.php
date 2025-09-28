@@ -145,7 +145,7 @@ class Shadowrocket extends AbstractProtocol
             'alterId' => 0
         ];
 
-        // 判断是否开启xtls
+        // Check if XTLS is enabled
         if (data_get($protocol_settings, 'flow')) {
             $xtlsMap = [
                 'none' => 0,
@@ -199,6 +199,34 @@ class Shadowrocket extends AbstractProtocol
                 $config['path'] = data_get($protocol_settings, 'network_settings.serviceName');
                 $config['host'] = data_get($protocol_settings, 'tls_settings.server_name') ?? $server['host'];
                 break;
+            case 'kcp':
+                $config['obfs'] = "kcp";
+                if ($seed = data_get($protocol_settings, 'network_settings.seed')) {
+                    $config['path'] = $seed;
+                }
+                $config['type'] = data_get($protocol_settings, 'network_settings.header.type', 'none');
+                break;
+            case 'httpupgrade':
+                $config['obfs'] = "httpupgrade";
+                if ($path = data_get($protocol_settings, 'network_settings.path')) {
+                    $config['path'] = $path;
+                }
+                if ($host = data_get($protocol_settings, 'network_settings.host', $server['host'])) {
+                    $config['obfsParam'] = $host;
+                }
+                break;
+            case 'xhttp':
+                $config['obfs'] = "xhttp";
+                if ($path = data_get($protocol_settings, 'network_settings.path')) {
+                    $config['path'] = $path;
+                }
+                if ($host = data_get($protocol_settings, 'network_settings.host', $server['host'])) {
+                    $config['obfsParam'] = $host;
+                }
+                if ($mode = data_get($protocol_settings, 'network_settings.mode', 'auto')) {
+                    $config['mode'] = $mode;
+                }
+                break;
         }
 
         $query = http_build_query($config, '', '&', PHP_QUERY_RFC3986);
@@ -237,7 +265,7 @@ class Shadowrocket extends AbstractProtocol
     public static function buildHysteria($password, $server)
     {
         $protocol_settings = $server['protocol_settings'];
-        $uri = ''; // 初始化变量
+        $uri = ''; // Initialize variable
 
         switch (data_get($protocol_settings, 'version')) {
             case 1:

@@ -12,7 +12,7 @@ class Setting
     const CACHE_KEY = 'admin_settings';
 
     private Repository $cache;
-    private ?array $loadedSettings = null; // 请求内缓存
+    private ?array $loadedSettings = null; // Request-level cache
 
     public function __construct()
     {
@@ -20,7 +20,7 @@ class Setting
     }
 
     /**
-     * 获取配置.
+     * Get configuration.
      */
     public function get(string $key, mixed $default = null): mixed
     {
@@ -29,7 +29,7 @@ class Setting
     }
 
     /**
-     * 设置配置信息.
+     * Set configuration information.
      */
     public function set(string $key, mixed $value = null): bool
     {
@@ -39,7 +39,7 @@ class Setting
     }
 
     /**
-     * 保存配置到数据库.
+     * Save configuration to database.
      */
     public function save(array $settings): bool
     {
@@ -51,7 +51,7 @@ class Setting
     }
 
     /**
-     * 删除配置信息
+     * Delete configuration information
      */
     public function remove(string $key): bool
     {
@@ -61,7 +61,7 @@ class Setting
     }
 
     /**
-     * 更新单个设置项
+     * Update single setting item
      */
     public function update(string $key, $value): bool
     {
@@ -69,7 +69,7 @@ class Setting
     }
     
     /**
-     * 批量获取配置项
+     * Batch get configuration items
      */
     public function getBatch(array $keys): array
     {
@@ -79,7 +79,7 @@ class Setting
         foreach ($keys as $index => $item) {
             $isNumericIndex = is_numeric($index);
             $key = strtolower($isNumericIndex ? $item : $index);
-            $default = $isNumericIndex ? config('v2board.' . $item) : (config('v2board.' . $key) ?? $item);
+            $default = $isNumericIndex ? config('xboard.' . $item) : (config('xboard.' . $key) ?? $item);
             
             $result[$item] = Arr::get($this->loadedSettings, $key, $default);
         }
@@ -88,7 +88,7 @@ class Setting
     }
     
     /**
-     * 将所有设置转换为数组
+     * Convert all settings to array
      */
     public function toArray(): array
     {
@@ -97,7 +97,7 @@ class Setting
     }
 
     /**
-     * 加载配置到请求内缓存
+     * Load configuration to request-level cache
      */
     private function load(): void
     {
@@ -113,7 +113,7 @@ class Setting
                 );
             });
             
-            // 处理JSON格式的值
+            // Handle JSON format values
             foreach ($settings as $key => $value) {
                 if (is_string($value)) {
                     $decoded = json_decode($value, true);
@@ -130,7 +130,7 @@ class Setting
     }
 
     /**
-     * 清空缓存
+     * Clear cache
      */
     private function flush(): void
     {

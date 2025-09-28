@@ -138,7 +138,7 @@ return [
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => env('REDIS_DB', 0),
-            'persistent' => true, // 开启持久连接
+            'persistent' => true, // Enable persistent connections
         ],
 
         'cache' => [

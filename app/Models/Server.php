@@ -15,41 +15,41 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
  * App\Models\Server
  *
  * @property int $id
- * @property string $name 节点名称
- * @property string $type 服务类型
- * @property string $host 主机地址
- * @property string|int $port 端口
- * @property int|null $server_port 服务器端口
- * @property array|null $group_ids 分组IDs
- * @property array|null $route_ids 路由IDs
- * @property array|null $tags 标签
- * @property boolean $show 是否显示
- * @property string|null $allow_insecure 是否允许不安全
- * @property string|null $network 网络类型
- * @property int|null $parent_id 父节点ID
- * @property float|null $rate 倍率
- * @property boolean $rate_time_enable 是否启用时间范围功能
- * @property array|null $rate_time_ranges 倍率时间范围
- * @property int|null $sort 排序
- * @property array|null $protocol_settings 协议设置
+ * @property string $name Server name
+ * @property string $type Service type
+ * @property string $host Host address
+ * @property string|int $port Port
+ * @property int|null $server_port Server port
+ * @property array|null $group_ids Group IDs
+ * @property array|null $route_ids Route IDs
+ * @property array|null $tags Tags
+ * @property boolean $show Whether to show
+ * @property string|null $allow_insecure Allow insecure
+ * @property string|null $network Network type
+ * @property int|null $parent_id Parent node ID
+ * @property float|null $rate Rate multiplier
+ * @property boolean $rate_time_enable Enable time range functionality
+ * @property array|null $rate_time_ranges Rate time ranges
+ * @property int|null $sort Sort order
+ * @property array|null $protocol_settings Protocol settings
  * @property int $created_at
  * @property int $updated_at
  * 
- * @property-read Server|null $parent 父节点
- * @property-read \Illuminate\Database\Eloquent\Collection<int, StatServer> $stats 节点统计
+ * @property-read Server|null $parent Parent node
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, StatServer> $stats Node statistics
  * 
- * @property-read int|null $last_check_at 最后检查时间（Unix时间戳）
- * @property-read int|null $last_push_at 最后推送时间（Unix时间戳）
- * @property-read int $online 在线用户数
- * @property-read int $is_online 是否在线（1在线 0离线）
- * @property-read string $available_status 可用状态描述
- * @property-read string $cache_key 缓存键
- * @property string|null $ports 端口范围
- * @property string|null $password 密码
- * @property int|null $u 上行流量
- * @property int|null $d 下行流量
- * @property int|null $total 总流量
- * @property-read array|null $load_status 负载状态（包含CPU、内存、交换区、磁盘信息）
+ * @property-read int|null $last_check_at Last check time (Unix timestamp)
+ * @property-read int|null $last_push_at Last push time (Unix timestamp)
+ * @property-read int $online Online users count
+ * @property-read int $is_online Is online (1 online 0 offline)
+ * @property-read string $available_status Available status description
+ * @property-read string $cache_key Cache key
+ * @property string|null $ports Port range
+ * @property string|null $password Password
+ * @property int|null $u Upload traffic
+ * @property int|null $d Download traffic
+ * @property int|null $total Total traffic
+ * @property-read array|null $load_status Load status (includes CPU, memory, swap, disk info)
  */
 class Server extends Model
 {
@@ -360,7 +360,7 @@ class Server extends Model
     }
 
     /**
-     * 最后检查时间访问器
+     * Last check time accessor
      */
     protected function lastCheckAt(): Attribute
     {
@@ -374,7 +374,7 @@ class Server extends Model
     }
 
     /**
-     * 最后推送时间访问器
+     * Last push time accessor
      */
     protected function lastPushAt(): Attribute
     {
@@ -388,7 +388,7 @@ class Server extends Model
     }
 
     /**
-     * 在线用户数访问器
+     * Online users count accessor
      */
     protected function online(): Attribute
     {
@@ -402,7 +402,7 @@ class Server extends Model
     }
 
     /**
-     * 是否在线访问器
+     * Is online accessor
      */
     protected function isOnline(): Attribute
     {
@@ -414,7 +414,7 @@ class Server extends Model
     }
 
     /**
-     * 缓存键访问器
+     * Cache key accessor
      */
     protected function cacheKey(): Attribute
     {
@@ -426,7 +426,7 @@ class Server extends Model
     }
 
     /**
-     * 服务器密钥访问器
+     * Server key accessor
      */
     protected function serverKey(): Attribute
     {
@@ -441,7 +441,7 @@ class Server extends Model
     }
 
     /**
-     * 负载状态访问器
+     * Load status accessor
      */
     protected function loadStatus(): Attribute
     {

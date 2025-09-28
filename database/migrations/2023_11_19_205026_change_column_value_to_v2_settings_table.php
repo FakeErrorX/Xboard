@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('v2_settings', function (Blueprint $table) {
-            $table->text('value')->comment('设置值')->nullable()->change();
+            $table->text('value')->comment('Settings value')->nullable()->change();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('v2_settings', function (Blueprint $table) {
-            $table->string('value')->comment('设置值')->nullable()->change();
+            $table->string('value')->comment('Settings value')->nullable()->change();
         });
     }
 };

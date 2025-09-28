@@ -11,27 +11,27 @@ use Symfony\Component\Process\Process;
 class BackupDatabase extends Command
 {
     protected $signature = 'backup:database {upload?}';
-    protected $description = '备份数据库并上传到 Google Cloud Storage';
+    protected $description = 'Backup database and upload to Google Cloud Storage';
 
     public function handle()
     {
         $isUpload = $this->argument('upload');
-        // 如果是上传到云端则判断是否存在必要配置
+        // If uploading to cloud, check if necessary configurations exist
         if($isUpload){
             $requiredConfigs = ['database.connections.mysql', 'cloud_storage.google_cloud.key_file', 'cloud_storage.google_cloud.storage_bucket'];
             foreach ($requiredConfigs as $config) {
                 if (blank(config($config))) {
-                    $this->error("❌：缺少必要配置项: $config ， 取消备份");
+                    $this->error("❌: Missing required configuration: $config, backup cancelled");
                     return;
                 }
             }
         }
 
-        // 数据库备份逻辑
+        // Database backup logic
         try{
             if (config('database.default') === 'mysql'){
                 $databaseBackupPath = storage_path('backup/' .  now()->format('Y-m-d_H-i-s') . '_' . config('database.connections.mysql.database') . '_database_backup.sql');
-                $this->info("1️⃣：开始备份Mysql");
+                $this->info("1️⃣: Starting MySQL backup");
                 \Spatie\DbDumper\Databases\MySql::create()
                     ->setHost(config('database.connections.mysql.host'))
                     ->setPort(config('database.connections.mysql.port'))
@@ -39,61 +39,61 @@ class BackupDatabase extends Command
                     ->setUserName(config('database.connections.mysql.username'))
                     ->setPassword(config('database.connections.mysql.password'))
                     ->dumpToFile($databaseBackupPath);
-                $this->info("2️⃣：Mysql备份完成");
+                $this->info("2️⃣: MySQL backup completed");
             }elseif(config('database.default') === 'sqlite'){
                 $databaseBackupPath = storage_path('backup/' .  now()->format('Y-m-d_H-i-s') . '_sqlite'  . '_database_backup.sql');
-                $this->info("1️⃣：开始备份Sqlite");
+                $this->info("1️⃣: Starting SQLite backup");
                 \Spatie\DbDumper\Databases\Sqlite::create()
                     ->setDbName(config('database.connections.sqlite.database'))
                     ->dumpToFile($databaseBackupPath);
-                $this->info("2️⃣：Sqlite备份完成");
+                $this->info("2️⃣: SQLite backup completed");
             }else{
-                $this->error('备份失败，你的数据库不是sqlite或者mysql');
+                $this->error('Backup failed, your database is not SQLite or MySQL');
                 return;
             }
-            $this->info('3️⃣：开始压缩备份文件');
-            // 使用 gzip 压缩备份文件
+            $this->info('3️⃣: Starting to compress backup file');
+            // Use gzip to compress backup file
             $compressedBackupPath = $databaseBackupPath . '.gz';
             $gzipCommand = new Process(["gzip", "-c", $databaseBackupPath]);
             $gzipCommand->run();
 
-            // 检查压缩是否成功
+            // Check if compression was successful
             if ($gzipCommand->isSuccessful()) {
-                // 压缩成功，你可以删除原始备份文件
+                // Compression successful, you can delete the original backup file
                 file_put_contents($compressedBackupPath, $gzipCommand->getOutput());
-                $this->info('4️⃣：文件压缩成功');
+                $this->info('4️⃣: File compression successful');
                 unlink($databaseBackupPath);
             } else {
-                // 压缩失败，处理错误
+                // Compression failed, handle error
                 echo $gzipCommand->getErrorOutput();
-                $this->error('😔：文件压缩失败');
+                $this->error('😔: File compression failed');
                 unlink($databaseBackupPath);
                 return;
             }
             if (!$isUpload){
-                $this->info("🎉：数据库成功备份到：$compressedBackupPath");
+                $this->info("🎉: Database successfully backed up to: $compressedBackupPath");
             }else{
-                // 传到云盘
-                $this->info("5️⃣：开始将备份上传到Google Cloud");
-                // Google Cloud Storage 配置
+                // Upload to cloud storage
+                $this->info("5️⃣: Starting to upload backup to Google Cloud");
+                // Google Cloud Storage configuration
                 $storage = new StorageClient([
                     'keyFilePath' => config('cloud_storage.google_cloud.key_file'),
                 ]);
                 $bucket = $storage->bucket(config('cloud_storage.google_cloud.storage_bucket'));
                 $objectName = 'backup/' . now()->format('Y-m-d_H-i-s') . '_database_backup.sql.gz';
-                // 上传文件
+                // Upload file
                 $bucket->upload(fopen($compressedBackupPath, 'r'), [
                     'name' => $objectName,
                 ]);
         
-                // 输出文件链接
-                Log::channel('backup')->info("🎉：数据库备份已上传到 Google Cloud Storage: $objectName");
-                $this->info("🎉：数据库备份已上传到 Google Cloud Storage: $objectName");
+                // Output file link
+                Log::channel('backup')->info("🎉: Database backup has been uploaded to Google Cloud Storage: $objectName");
+                $this->info("🎉: Database backup has been uploaded to Google Cloud Storage: $objectName");
                 File::delete($compressedBackupPath);
             }
         }catch(\Exception $e){
-            Log::channel('backup')->error("😔：数据库备份失败 \n" . $e);
-            $this->error("😔：数据库备份失败\n" . $e);
+            Log::channel('backup')->error("😔: Database backup failed \n" . $e);
+            $this->error("😔: Database backup failed\n" . $e);
             File::delete($compressedBackupPath);
         }
     }

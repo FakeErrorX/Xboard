@@ -153,10 +153,10 @@ class Helper
     }
 
     /**
-     * 根据规则替换域名中对应的字符串
+     * Replace corresponding strings in domain according to rules
      *
-     * @param string $input 用户输入的字符串
-     * @return string 替换后的字符串
+     * @param string $input User input string
+     * @return string String after replacement
      */
     public static function replaceByPattern($input)
     {
@@ -205,10 +205,10 @@ class Helper
     
     /**
      * convert the transfer_enable to GB
-     * @param int $transfer_enable
-     * @return int
+     * @param float $transfer_enable
+     * @return float
      */
-    public static function transferToGB(int $transfer_enable): int
+    public static function transferToGB(float $transfer_enable): float
     {
         return $transfer_enable / 1073741824;
     }

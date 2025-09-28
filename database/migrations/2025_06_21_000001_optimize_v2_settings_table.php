@@ -15,9 +15,9 @@ class OptimizeV2SettingsTable extends Migration
   public function up()
   {
     Schema::table('v2_settings', function (Blueprint $table) {
-      // 将 value 字段改为 MEDIUMTEXT，支持最大16MB内容
+      // Change value field to MEDIUMTEXT, supporting up to 16MB content
       $table->mediumText('value')->nullable()->change();
-      // 添加优化索引
+      // Add optimization indexes
       $table->index('name', 'idx_setting_name');
     });
   }

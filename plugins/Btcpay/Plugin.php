@@ -27,28 +27,28 @@ class Plugin extends AbstractPlugin implements PaymentInterface
     {
         return [
             'btcpay_url' => [
-                'label' => 'API接口所在网址',
+                'label' => 'API Interface URL',
                 'type' => 'string',
                 'required' => true,
-                'description' => '包含最后的斜杠，例如：https://your-btcpay.com/'
+                'description' => 'Including the trailing slash, for example: https://your-btcpay.com/'
             ],
             'btcpay_storeId' => [
                 'label' => 'Store ID',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'BTCPay商店标识符'
+                'description' => 'BTCPay store identifier'
             ],
             'btcpay_api_key' => [
                 'label' => 'API KEY',
                 'type' => 'string',
                 'required' => true,
-                'description' => '个人设置中的API KEY(非商店设置中的)'
+                'description' => 'API KEY from personal settings (not from store settings)'
             ],
             'btcpay_webhook_key' => [
                 'label' => 'WEBHOOK KEY',
                 'type' => 'string',
                 'required' => true,
-                'description' => 'Webhook通知密钥'
+                'description' => 'Webhook notification key'
             ],
         ];
     }

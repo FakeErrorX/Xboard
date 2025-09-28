@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Cache;
 class MailLinkService
 {
     /**
-     * 处理邮件链接登录逻辑
+     * Handle email link login logic
      *
-     * @param string $email 用户邮箱
-     * @param string|null $redirect 重定向地址
-     * @return array 返回处理结果
+     * @param string $email User email
+     * @param string|null $redirect Redirect address
+     * @return array Returns processing result
      */
     public function handleMailLink(string $email, ?string $redirect = null): array
     {
@@ -29,7 +29,7 @@ class MailLinkService
 
         $user = User::where('email', $email)->first();
         if (!$user) {
-            return [true, true]; // 成功但用户不存在，保护用户隐私
+            return [true, true]; // Success but user does not exist, protect user privacy
         }
 
         $code = Helper::guid();
@@ -50,10 +50,10 @@ class MailLinkService
     }
 
     /**
-     * 发送邮件链接登录邮件
+     * Send email link login email
      *
-     * @param User $user 用户对象
-     * @param string $link 登录链接
+     * @param User $user User object
+     * @param string $link Login link
      * @return void
      */
     private function sendMailLinkEmail(User $user, string $link): void
@@ -73,10 +73,10 @@ class MailLinkService
     }
 
     /**
-     * 处理Token登录
-     * 
-     * @param string $token 登录令牌
-     * @return int|null 用户ID或null
+     * Handle Token login
+     *
+     * @param string $token Login token
+     * @return int|null User ID or null
      */
     public function handleTokenLogin(string $token): ?int
     {

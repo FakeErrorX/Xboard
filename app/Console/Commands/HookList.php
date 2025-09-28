@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 class HookList extends Command
 {
   protected $signature = 'hook:list';
-  protected $description = '列出系统支持的所有 hooks（静态扫描代码）';
+  protected $description = 'List all hooks supported by the system (static code scanning)';
 
   public function handle()
   {
@@ -31,7 +31,7 @@ class HookList extends Command
     }
     $hooks = $hooks->unique()->sort()->values();
     if ($hooks->isEmpty()) {
-      $this->info('未扫描到任何 hook');
+      $this->info('No hooks found');
     } else {
       $this->info('All Supported Hooks:');
       foreach ($hooks as $hook) {

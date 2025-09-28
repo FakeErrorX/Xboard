@@ -17,13 +17,13 @@ use Illuminate\Support\Facades\Cache;
  */
 class ShadowsocksTidalabController extends Controller
 {
-    // 后端获取用户
+    // Backend get users
     public function user(Request $request)
     {
         ini_set('memory_limit', -1);
-        $server = $request->input('node_info');
+        $server = $request->attributes->get('node_info');
         Cache::put(CacheKey::get('SERVER_SHADOWSOCKS_LAST_CHECK_AT', $server->id), time(), 3600);
-        $users = ServerService::getAvailableUsers($server->group_ids);
+        $users = ServerService::getAvailableUsers($server);
         $result = [];
         foreach ($users as $user) {
             array_push($result, [
@@ -42,10 +42,10 @@ class ShadowsocksTidalabController extends Controller
         ])->header('ETag', "\"{$eTag}\"");
     }
 
-    // 后端提交数据
+    // Backend submit data
     public function submit(Request $request)
     {
-        $server = $request->input('node_info');
+        $server = $request->attributes->get('node_info');
         $data = json_decode(request()->getContent(), true);
         Cache::put(CacheKey::get('SERVER_SHADOWSOCKS_ONLINE_USER', $server->id), count($data), 3600);
         Cache::put(CacheKey::get('SERVER_SHADOWSOCKS_LAST_PUSH_AT', $server->id), time(), 3600);

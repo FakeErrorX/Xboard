@@ -9,10 +9,10 @@ use ReCaptcha\ReCaptcha;
 class CaptchaService
 {
     /**
-     * 验证人机验证码
+     * Verify human verification code
      *
-     * @param Request $request 请求对象
-     * @return array [是否通过, 错误消息]
+     * @param Request $request Request object
+     * @return array [Whether passed, error message]
      */
     public function verify(Request $request): array
     {
@@ -31,7 +31,7 @@ class CaptchaService
     }
 
     /**
-     * 验证 Cloudflare Turnstile
+     * Verify Cloudflare Turnstile
      *
      * @param Request $request
      * @return array
@@ -58,7 +58,7 @@ class CaptchaService
     }
 
     /**
-     * 验证 Google reCAPTCHA v3
+     * Verify Google reCAPTCHA v3
      *
      * @param Request $request
      * @return array
@@ -77,7 +77,7 @@ class CaptchaService
             return [false, [400, __('Invalid code is incorrect')]];
         }
 
-        // 检查分数阈值（如果有的话）
+        // Check score threshold (if any)
         $score = $recaptchaResp->getScore();
         $threshold = admin_setting('recaptcha_v3_score_threshold', 0.5);
         if ($score < $threshold) {
@@ -88,7 +88,7 @@ class CaptchaService
     }
 
     /**
-     * 验证 Google reCAPTCHA v2
+     * Verify Google reCAPTCHA v2
      *
      * @param Request $request
      * @return array

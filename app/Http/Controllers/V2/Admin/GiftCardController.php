@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 class GiftCardController extends Controller
 {
     /**
-     * 获取礼品卡模板列表
+     * Get gift card template list
      */
     public function templates(Request $request)
     {
@@ -59,25 +59,17 @@ class GiftCardController extends Controller
                 'admin_id' => $template->admin_id,
                 'created_at' => $template->created_at,
                 'updated_at' => $template->updated_at,
-                // 统计信息
+                // Statistics
                 'codes_count' => $template->codes()->count(),
                 'used_count' => $template->usages()->count(),
             ];
         })->values();
 
-        return response()->json([
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $templates->currentPage(),
-                'last_page' => $templates->lastPage(),
-                'per_page' => $templates->perPage(),
-                'total' => $templates->total(),
-            ],
-        ]);
+        return $this->paginate( $templates);
     }
 
     /**
-     * 创建礼品卡模板
+     * Create gift card template
      */
     public function createTemplate(Request $request)
     {
@@ -99,12 +91,12 @@ class GiftCardController extends Controller
             'theme_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'sort' => 'integer|min:0',
         ], [
-            'name.required' => '礼品卡名称不能为空',
-            'type.required' => '礼品卡类型不能为空',
-            'type.in' => '无效的礼品卡类型',
-            'rewards.required' => '奖励配置不能为空',
-            'theme_color.regex' => '主题色格式不正确',
-            'background_image.url' => '背景图片必须是有效的URL',
+            'name.required' => 'Gift card name cannot be empty',
+            'type.required' => 'Gift card type cannot be empty',
+            'type.in' => 'Invalid gift card type',
+            'rewards.required' => 'Reward configuration cannot be empty',
+            'theme_color.regex' => 'Theme color format is incorrect',
+            'background_image.url' => 'Background image must be a valid URL',
         ]);
 
         try {
@@ -128,17 +120,17 @@ class GiftCardController extends Controller
 
             return $this->success($template);
         } catch (\Exception $e) {
-            Log::error('创建礼品卡模板失败', [
+            Log::error('Failed to create gift card template', [
                 'admin_id' => $request->user()->id,
                 'data' => $request->all(),
                 'error' => $e->getMessage(),
             ]);
-            return $this->fail([500, '创建失败']);
+            return $this->fail([500, 'Creation failed']);
         }
     }
 
     /**
-     * 更新礼品卡模板
+     * Update gift card template
      */
     public function updateTemplate(Request $request)
     {
@@ -165,7 +157,7 @@ class GiftCardController extends Controller
 
         $template = GiftCardTemplate::find($validatedData['id']);
         if (!$template) {
-            return $this->fail([404, '模板不存在']);
+            return $this->fail([404, 'Template not found']);
         }
 
         try {
@@ -181,17 +173,17 @@ class GiftCardController extends Controller
 
             return $this->success($template->fresh());
         } catch (\Exception $e) {
-            Log::error('更新礼品卡模板失败', [
+            Log::error('Failed to update gift card template', [
                 'admin_id' => $request->user()->id,
                 'template_id' => $template->id,
                 'error' => $e->getMessage(),
             ]);
-            return $this->fail([500, '更新失败']);
+            return $this->fail([500, 'Update failed']);
         }
     }
 
     /**
-     * 删除礼品卡模板
+     * Delete gift card template
      */
     public function deleteTemplate(Request $request)
     {
@@ -201,29 +193,29 @@ class GiftCardController extends Controller
 
         $template = GiftCardTemplate::find($request->input('id'));
         if (!$template) {
-            return $this->fail([404, '模板不存在']);
+            return $this->fail([404, 'Template not found']);
         }
 
-        // 检查是否有关联的兑换码
+        // Check if there are associated redemption codes
         if ($template->codes()->exists()) {
-            return $this->fail([400, '该模板下存在兑换码，无法删除']);
+            return $this->fail([400, 'Cannot delete template with existing redemption codes']);
         }
 
         try {
             $template->delete();
             return $this->success(true);
         } catch (\Exception $e) {
-            Log::error('删除礼品卡模板失败', [
+            Log::error('Failed to delete gift card template', [
                 'admin_id' => $request->user()->id,
                 'template_id' => $template->id,
                 'error' => $e->getMessage(),
             ]);
-            return $this->fail([500, '删除失败']);
+            return $this->fail([500, 'Delete failed']);
         }
     }
 
     /**
-     * 生成兑换码
+     * Generate redemption codes
      */
     public function generateCodes(Request $request)
     {
@@ -234,15 +226,15 @@ class GiftCardController extends Controller
             'expires_hours' => 'nullable|integer|min:1',
             'max_usage' => 'integer|min:1|max:1000',
         ], [
-            'template_id.required' => '请选择礼品卡模板',
-            'count.required' => '请指定生成数量',
-            'count.max' => '单次最多生成10000个兑换码',
-            'prefix.regex' => '前缀只能包含大写字母和数字',
+            'template_id.required' => 'Please select a gift card template',
+            'count.required' => 'Please specify generation count',
+            'count.max' => 'Maximum 10000 redemption codes per batch',
+            'prefix.regex' => 'Prefix can only contain uppercase letters and numbers',
         ]);
 
         $template = GiftCardTemplate::find($request->input('template_id'));
         if (!$template->isAvailable()) {
-            return $this->fail([400, '模板已被禁用']);
+            return $this->fail([400, 'Template has been disabled']);
         }
 
         try {
@@ -261,10 +253,10 @@ class GiftCardController extends Controller
                 $options
             );
 
-            // 查询本次生成的所有兑换码
+            // Query all redemption codes generated in this batch
             $codes = GiftCardCode::where('batch_id', $batchId)->get();
 
-            // 判断是否导出 CSV
+            // Check if CSV export is requested
             if ($request->input('download_csv')) {
                 $headers = [
                     'Content-Type' => 'text/csv',
@@ -272,29 +264,29 @@ class GiftCardController extends Controller
                 ];
                 $callback = function () use ($codes, $template) {
                     $handle = fopen('php://output', 'w');
-                    // 表头
+                    // Header row
                     fputcsv($handle, [
-                        '兑换码',
-                        '前缀',
-                        '有效期',
-                        '最大使用次数',
-                        '批次号',
-                        '创建时间',
-                        '模板名称',
-                        '模板类型',
-                        '模板奖励',
-                        '状态',
-                        '使用者',
-                        '使用时间',
-                        '备注'
+                        'Redemption Code',
+                        'Prefix',
+                        'Expiry Date',
+                        'Max Usage Count',
+                        'Batch ID',
+                        'Created Time',
+                        'Template Name',
+                        'Template Type',
+                        'Template Rewards',
+                        'Status',
+                        'Used By',
+                        'Used Time',
+                        'Remarks'
                     ]);
                     foreach ($codes as $code) {
-                        $expireDate = $code->expires_at ? date('Y-m-d H:i:s', $code->expires_at) : '长期有效';
+                        $expireDate = $code->expires_at ? date('Y-m-d H:i:s', $code->expires_at) : 'Permanent';
                         $createDate = date('Y-m-d H:i:s', $code->created_at);
                         $templateName = $template->name ?? '';
                         $templateType = $template->type ?? '';
                         $templateRewards = $template->rewards ? json_encode($template->rewards, JSON_UNESCAPED_UNICODE) : '';
-                        // 状态判断
+                        // Status check
                         $status = $code->status_name;
                         $usedBy = $code->user_id ?? '';
                         $usedAt = $code->used_at ? date('Y-m-d H:i:s', $code->used_at) : '';
@@ -320,7 +312,7 @@ class GiftCardController extends Controller
                 return response()->streamDownload($callback, 'gift_codes.csv', $headers);
             }
 
-            Log::info('批量生成兑换码', [
+            Log::info('Batch generate redemption codes', [
                 'admin_id' => $request->user()->id,
                 'template_id' => $request->input('template_id'),
                 'count' => $request->input('count'),
@@ -330,20 +322,20 @@ class GiftCardController extends Controller
             return $this->success([
                 'batch_id' => $batchId,
                 'count' => $request->input('count'),
-                'message' => '生成成功',
+                'message' => 'Generated successfully',
             ]);
         } catch (\Exception $e) {
-            Log::error('生成兑换码失败', [
+            Log::error('Failed to generate redemption codes', [
                 'admin_id' => $request->user()->id,
                 'data' => $request->all(),
                 'error' => $e->getMessage(),
             ]);
-            return $this->fail([500, '生成失败']);
+            return $this->fail([500, 'Generation failed']);
         }
     }
 
     /**
-     * 获取兑换码列表
+     * Get redemption codes list
      */
     public function codes(Request $request)
     {
@@ -352,7 +344,7 @@ class GiftCardController extends Controller
             'batch_id' => 'string',
             'status' => 'integer|in:0,1,2,3',
             'page' => 'integer|min:1',
-            'per_page' => 'integer|min:1|max:100',
+            'per_page' => 'integer|min:1|max:500',
         ]);
 
         $query = GiftCardCode::with(['template', 'user']);
@@ -391,19 +383,11 @@ class GiftCardController extends Controller
             ];
         })->values();
 
-        return response()->json([
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $codes->currentPage(),
-                'last_page' => $codes->lastPage(),
-                'per_page' => $codes->perPage(),
-                'total' => $codes->total(),
-            ],
-        ]);
+        return $this->paginate($codes);
     }
 
     /**
-     * 禁用/启用兑换码
+     * Disable/Enable redemption codes
      */
     public function toggleCode(Request $request)
     {
@@ -414,7 +398,7 @@ class GiftCardController extends Controller
 
         $code = GiftCardCode::find($request->input('id'));
         if (!$code) {
-            return $this->fail([404, '兑换码不存在']);
+            return $this->fail([404, 'Redemption code not found']);
         }
 
         try {
@@ -428,15 +412,15 @@ class GiftCardController extends Controller
             }
 
             return $this->success([
-                'message' => $request->input('action') === 'disable' ? '已禁用' : '已启用',
+                'message' => $request->input('action') === 'disable' ? 'Disabled' : 'Enabled',
             ]);
         } catch (\Exception $e) {
-            return $this->fail([500, '操作失败']);
+            return $this->fail([500, 'Operation failed']);
         }
     }
 
     /**
-     * 导出兑换码
+     * Export redemption codes
      */
     public function exportCodes(Request $request)
     {
@@ -456,7 +440,7 @@ class GiftCardController extends Controller
     }
 
     /**
-     * 获取使用记录
+     * Get usage records
      */
     public function usages(Request $request)
     {
@@ -464,7 +448,7 @@ class GiftCardController extends Controller
             'template_id' => 'integer|exists:v2_gift_card_template,id',
             'user_id' => 'integer|exists:v2_user,id',
             'page' => 'integer|min:1',
-            'per_page' => 'integer|min:1|max:100',
+            'per_page' => 'integer|min:1|max:500',
         ]);
 
         $query = GiftCardUsage::with(['template', 'code', 'user', 'inviteUser']);
@@ -480,7 +464,7 @@ class GiftCardController extends Controller
         $perPage = $request->input('per_page', 15);
         $usages = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
-        $data = $usages->getCollection()->map(function ($usage) {
+        $usages->transform(function ($usage) {
             return [
                 'id' => $usage->id,
                 'code' => $usage->code->code ?? '',
@@ -493,19 +477,11 @@ class GiftCardController extends Controller
                 'created_at' => $usage->created_at,
             ];
         })->values();
-        return response()->json([
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $usages->currentPage(),
-                'last_page' => $usages->lastPage(),
-                'per_page' => $usages->perPage(),
-                'total' => $usages->total(),
-            ],
-        ]);
+        return $this->paginate($usages);
     }
 
     /**
-     * 获取统计数据
+     * Get statistics data
      */
     public function statistics(Request $request)
     {
@@ -517,7 +493,7 @@ class GiftCardController extends Controller
         $startDate = $request->input('start_date', date('Y-m-d', strtotime('-30 days')));
         $endDate = $request->input('end_date', date('Y-m-d'));
 
-        // 总体统计
+        // Overall statistics
         $totalStats = [
             'templates_count' => GiftCardTemplate::count(),
             'active_templates_count' => GiftCardTemplate::where('status', 1)->count(),
@@ -526,7 +502,7 @@ class GiftCardController extends Controller
             'usages_count' => GiftCardUsage::count(),
         ];
 
-        // 每日使用统计
+        // Daily usage statistics
         $driver = DB::connection()->getDriverName();
         $dateExpression = "date(created_at, 'unixepoch')"; // Default for SQLite
         if ($driver === 'mysql') {
@@ -541,7 +517,7 @@ class GiftCardController extends Controller
             ->orderBy('date')
             ->get();
 
-        // 类型统计
+        // Type statistics
         $typeStats = GiftCardUsage::with('template')
             ->selectRaw('template_id, COUNT(*) as count')
             ->groupBy('template_id')
@@ -562,7 +538,7 @@ class GiftCardController extends Controller
     }
 
     /**
-     * 获取所有可用的礼品卡类型
+     * Get all available gift card types
      */
     public function types()
     {
@@ -570,7 +546,7 @@ class GiftCardController extends Controller
     }
 
     /**
-     * 更新单个兑换码
+     * Update single redemption code
      */
     public function updateCode(Request $request)
     {
@@ -583,7 +559,7 @@ class GiftCardController extends Controller
 
         $code = GiftCardCode::find($validatedData['id']);
         if (!$code) {
-            return $this->fail([404, '礼品卡不存在']);
+            return $this->fail([404, 'Gift card not found']);
         }
 
         try {
@@ -598,17 +574,17 @@ class GiftCardController extends Controller
 
             return $this->success($code->fresh());
         } catch (\Exception $e) {
-            Log::error('更新礼品卡信息失败', [
+            Log::error('Failed to update gift card information', [
                 'admin_id' => $request->user()->id,
                 'code_id' => $code->id,
                 'error' => $e->getMessage(),
             ]);
-            return $this->fail([500, '更新失败']);
+            return $this->fail([500, 'Update failed']);
         }
     }
 
     /**
-     * 删除礼品卡
+     * Delete gift card
      */
     public function deleteCode(Request $request)
     {
@@ -618,29 +594,29 @@ class GiftCardController extends Controller
 
         $code = GiftCardCode::find($request->input('id'));
         if (!$code) {
-            return $this->fail([404, '礼品卡不存在']);
+            return $this->fail([404, 'Gift card not found']);
         }
 
-        // 检查是否已被使用
+        // Check if already used
         if ($code->status === GiftCardCode::STATUS_USED) {
-            return $this->fail([400, '该礼品卡已被使用，无法删除']);
+            return $this->fail([400, 'Gift card has been used and cannot be deleted']);
         }
 
         try {
-            // 检查是否有关联的使用记录
+            // Check if there are related usage records
             if ($code->usages()->exists()) {
-                return $this->fail([400, '该礼品卡存在使用记录，无法删除']);
+                return $this->fail([400, 'Gift card has usage records and cannot be deleted']);
             }
 
             $code->delete();
-            return $this->success(['message' => '删除成功']);
+            return $this->success(['message' => 'Deleted successfully']);
         } catch (\Exception $e) {
-            Log::error('删除礼品卡失败', [
+            Log::error('Failed to delete gift card', [
                 'admin_id' => $request->user()->id,
                 'code_id' => $code->id,
                 'error' => $e->getMessage(),
             ]);
-            return $this->fail([500, '删除失败']);
+            return $this->fail([500, 'Delete failed']);
         }
     }
 }

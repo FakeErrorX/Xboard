@@ -8,7 +8,7 @@ use Illuminate\Support\ServiceProvider;
 class ProtocolServiceProvider extends ServiceProvider
 {
   /**
-   * 注册服务
+   * Register services
    *
    * @return void
    */
@@ -24,19 +24,19 @@ class ProtocolServiceProvider extends ServiceProvider
   }
 
   /**
-   * 启动服务
+   * Boot services
    *
    * @return void
    */
   public function boot()
   {
-    // 在启动时预加载协议类并缓存
+    // Preload and cache protocol classes at startup
     $this->app->make('protocols.manager')->registerAllProtocols();
 
   }
 
   /**
-   * 提供的服务
+   * Provided services
    *
    * @return array
    */

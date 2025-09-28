@@ -46,6 +46,7 @@ Required PHP extensions:
 - swoole
 - readline
 - event
+- mbstring
 
 #### 2.3 Enable Required PHP Functions
 Functions that need to be enabled:
@@ -111,7 +112,7 @@ location ~ .*\.(js|css)?$
 
 ### 2. Configure Scheduled Tasks
 - Type: Shell Script
-- Task Name: v2board
+- Task Name: xboard
 - Run User: www
 - Frequency: 1 minute
 - Script Content: `php /www/wwwroot/site-directory/artisan schedule:run`

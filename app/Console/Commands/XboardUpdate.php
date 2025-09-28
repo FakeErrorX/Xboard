@@ -25,7 +25,7 @@ class XboardUpdate extends Command
      *
      * @var string
      */
-    protected $description = 'xboard 更新';
+    protected $description = 'xboard update';
 
     /**
      * Create a new command instance.
@@ -44,20 +44,22 @@ class XboardUpdate extends Command
      */
     public function handle()
     {
-        $this->info('正在导入数据库请稍等...');
+        $this->info('Importing database, please wait...');
         Artisan::call("migrate");
         $this->info(Artisan::output());
-        $this->info('正在检查内置插件文件...');
+        $this->info('Checking built-in plugin files...');
         XboardInstall::restoreProtectedPlugins($this);
-        $this->info('正在检查并安装默认插件...');
+        $this->info('Checking and installing default plugins...');
         PluginManager::installDefaultPlugins();
-        $this->info('默认插件检查完成');
-        Artisan::call('reset:traffic', ['--fix-null' => true]);
+        $this->info('Default plugin check completed');
+        // Artisan::call('reset:traffic', ['--fix-null' => true]);
+        $this->info('Recalculating all users reset time...');
+        Artisan::call('reset:traffic', ['--force' => true]);
         $updateService = new UpdateService();
         $updateService->updateVersionCache();
         $themeService = app(ThemeService::class);
         $themeService->refreshCurrentTheme();
         Artisan::call('horizon:terminate');
-        $this->info('更新完毕，队列服务已重启，你无需进行任何操作。');
+        $this->info('Update completed, queue service has been restarted, no action needed from you.');
     }
 }

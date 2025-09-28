@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\App;
 
 if (!function_exists('admin_setting')) {
     /**
-     * 获取或保存配置参数.
+     * Get or save configuration parameter.
      *
      * @param  string|array  $key
      * @param  mixed  $default
@@ -23,17 +23,17 @@ if (!function_exists('admin_setting')) {
             return '';
         }
 
-        $default = config('v2board.' . $key) ?? $default;
+        $default = config('xboard.' . $key) ?? $default;
         return $setting->get($key) ?? $default;
     }
 }
 
 if (!function_exists('admin_settings_batch')) {
     /**
-     * 批量获取配置参数，性能优化版本
+     * Batch get configuration parameters, performance optimized version
      *
-     * @param array $keys 配置键名数组
-     * @return array 返回键值对数组
+     * @param array $keys Configuration key array
+     * @return array Returns key-value pair array
      */
     function admin_settings_batch(array $keys): array
     {
@@ -43,7 +43,7 @@ if (!function_exists('admin_settings_batch')) {
 
 if (!function_exists('source_base_url')) {
     /**
-     * 获取来源基础URL，优先Referer，其次Host
+     * Get source base URL, prioritize Referer, then Host
      * @param string $path
      * @return string
      */

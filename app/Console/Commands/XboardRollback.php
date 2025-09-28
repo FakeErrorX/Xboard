@@ -19,7 +19,7 @@ class XboardRollback extends Command
      *
      * @var string
      */
-    protected $description = 'xboard 回滚';
+    protected $description = 'XBoard rollback';
 
     /**
      * Create a new command instance.
@@ -38,7 +38,7 @@ class XboardRollback extends Command
      */
     public function handle()
     {
-        $this->info('正在回滚数据库请稍等...');
+        $this->info('Rolling back database, please wait...');
             \Artisan::call("migrate:rollback");
             $this->info(\Artisan::output());
     }

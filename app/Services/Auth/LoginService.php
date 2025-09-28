@@ -11,15 +11,15 @@ use Illuminate\Support\Facades\Cache;
 class LoginService
 {
     /**
-     * 处理用户登录
+     * Handle user login
      *
-     * @param string $email 用户邮箱
-     * @param string $password 用户密码
-     * @return array [成功状态, 用户对象或错误信息]
+     * @param string $email User email
+     * @param string $password User password
+     * @return array [Success status, User object or error message]
      */
     public function login(string $email, string $password): array
     {
-        // 检查密码错误限制
+        // Check password error limit
         if ((int) admin_setting('password_limit_enable', true)) {
             $passwordErrorCount = (int) Cache::get(CacheKey::get('PASSWORD_ERROR_LIMIT', $email), 0);
             if ($passwordErrorCount >= (int) admin_setting('password_limit_count', 5)) {
@@ -35,13 +35,13 @@ class LoginService
             }
         }
 
-        // 查找用户
+        // Find user
         $user = User::where('email', $email)->first();
         if (!$user) {
             return [false, [400, __('Incorrect email or password')]];
         }
 
-        // 验证密码
+        // Verify password
         if (
             !Helper::multiPasswordVerify(
                 $user->password_algo,
@@ -50,7 +50,7 @@ class LoginService
                 $user->password
             )
         ) {
-            // 增加密码错误计数
+            // Increase password error count
             if ((int) admin_setting('password_limit_enable', true)) {
                 $passwordErrorCount = (int) Cache::get(CacheKey::get('PASSWORD_ERROR_LIMIT', $email), 0);
                 Cache::put(
@@ -62,12 +62,12 @@ class LoginService
             return [false, [400, __('Incorrect email or password')]];
         }
 
-        // 检查账户状态
+        // Check account status
         if ($user->banned) {
             return [false, [400, __('Your account has been suspended')]];
         }
 
-        // 更新最后登录时间
+        // Update last login time
         $user->last_login_at = time();
         $user->save();
 
@@ -76,35 +76,35 @@ class LoginService
     }
 
     /**
-     * 处理密码重置
+     * Handle password reset
      *
-     * @param string $email 用户邮箱
-     * @param string $emailCode 邮箱验证码
-     * @param string $password 新密码
-     * @return array [成功状态, 结果或错误信息]
+     * @param string $email User email
+     * @param string $emailCode Email verification code
+     * @param string $password New password
+     * @return array [Success status, Result or error message]
      */
     public function resetPassword(string $email, string $emailCode, string $password): array
     {
-        // 检查重置请求限制
+        // Check reset request limit
         $forgetRequestLimitKey = CacheKey::get('FORGET_REQUEST_LIMIT', $email);
         $forgetRequestLimit = (int) Cache::get($forgetRequestLimitKey);
         if ($forgetRequestLimit >= 3) {
             return [false, [429, __('Reset failed, Please try again later')]];
         }
 
-        // 验证邮箱验证码
+        // Verify email verification code
         if ((string) Cache::get(CacheKey::get('EMAIL_VERIFY_CODE', $email)) !== (string) $emailCode) {
             Cache::put($forgetRequestLimitKey, $forgetRequestLimit ? $forgetRequestLimit + 1 : 1, 300);
             return [false, [400, __('Incorrect email verification code')]];
         }
 
-        // 查找用户
+        // Find user
         $user = User::where('email', $email)->first();
         if (!$user) {
             return [false, [400, __('This email is not registered in the system')]];
         }
 
-        // 更新密码
+        // Update password
         $user->password = password_hash($password, PASSWORD_DEFAULT);
         $user->password_algo = NULL;
         $user->password_salt = NULL;
@@ -115,7 +115,7 @@ class LoginService
 
         HookManager::call('user.password.reset.after', $user);
 
-        // 清除邮箱验证码
+        // Clear email verification code
         Cache::forget(CacheKey::get('EMAIL_VERIFY_CODE', $email));
 
         return [true, true];
@@ -123,13 +123,13 @@ class LoginService
 
 
     /**
-     * 生成临时登录令牌和快速登录URL
+     * Generate temporary login token and quick login URL
      *
-     * @param User $user 用户对象
-     * @param string $redirect 重定向路径
-     * @return string|null 快速登录URL
+     * @param User $user User object
+     * @param string $redirect Redirect path  
+     * @return string|null Quick login URL
      */
-    public function generateQuickLoginUrl(User $user, string $redirect = 'dashboard'): ?string
+    public function generateQuickLoginUrl(User $user, ?string $redirect = null): ?string
     {
         if (!$user || !$user->exists) {
             return null;
@@ -140,7 +140,8 @@ class LoginService
 
         Cache::put($key, $user->id, 60);
 
-        $loginRedirect = '/#/login?verify=' . $code . '&redirect=' . $redirect;
+        $redirect = $redirect ?: 'dashboard';
+        $loginRedirect = '/#/login?verify=' . $code . '&redirect=' . rawurlencode($redirect);
 
         if (admin_setting('app_url')) {
             $url = admin_setting('app_url') . $loginRedirect;

@@ -97,7 +97,7 @@ class ConfigSave extends FormRequest
         'register_limit_by_ip_enable' => 'boolean',
         'register_limit_count' => 'integer',
         'register_limit_expire' => 'integer',
-        'secure_path' => 'min:8|regex:/^[\w-]*$/',
+        'secure_path' => 'min:5|regex:/^[\w-]*$/',
         'password_limit_enable' => 'boolean',
         'password_limit_count' => 'integer',
         'password_limit_expire' => 'integer',
@@ -122,20 +122,20 @@ class ConfigSave extends FormRequest
 
     public function messages()
     {
-        // illiteracy prompt
+        // validation prompt
         return [
-            'app_url.url' => '站点URL格式不正确，必须携带http(s)://',
-            'subscribe_url.url' => '订阅URL格式不正确，必须携带http(s)://',
-            'server_token.min' => '通讯密钥长度必须大于16位',
-            'tos_url.url' => '服务条款URL格式不正确，必须携带http(s)://',
-            'telegram_discuss_link.url' => 'Telegram group address must be in URL format and must include http(s)://',
-            'logo.url' => 'LOGO URL格式不正确，必须携带https(s)://',
-            'secure_path.min' => '后台路径长度最小为8位',
-            'secure_path.regex' => '后台路径只能为字母或数字',
-            'captcha_type.in' => '人机验证类型只能选择 recaptcha、turnstile 或 recaptcha-v3',
-            'recaptcha_v3_score_threshold.numeric' => 'reCAPTCHA v3 分数阈值必须为数字',
-            'recaptcha_v3_score_threshold.min' => 'reCAPTCHA v3 分数阈值不能小于0',
-            'recaptcha_v3_score_threshold.max' => 'reCAPTCHA v3 分数阈值不能大于1'
+            'app_url.url' => 'Site URL format is incorrect, must include http(s)://',
+            'subscribe_url.url' => 'Subscribe URL format is incorrect, must include http(s)://',
+            'server_token.min' => 'Communication key length must be greater than 16 characters',
+            'tos_url.url' => 'Terms of Service URL format is incorrect, must include http(s)://',
+            'telegram_discuss_link.url' => 'Telegram group address must be a URL format, must include http(s)://',
+            'logo.url' => 'LOGO URL format is incorrect, must include https(s)://',
+            'secure_path.min' => 'Admin path length must be at least 5 characters',
+            'secure_path.regex' => 'Admin path can only contain letters or numbers',
+            'captcha_type.in' => 'Captcha type can only be recaptcha, turnstile or recaptcha-v3',
+            'recaptcha_v3_score_threshold.numeric' => 'reCAPTCHA v3 score threshold must be a number',
+            'recaptcha_v3_score_threshold.min' => 'reCAPTCHA v3 score threshold cannot be less than 0',
+            'recaptcha_v3_score_threshold.max' => 'reCAPTCHA v3 score threshold cannot be greater than 1'
         ];
     }
 }
