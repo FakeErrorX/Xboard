@@ -5,34 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="icon" href="./images/logo.png">
-  
-  <!-- Set initial title - can be customized -->
+  <!-- Set initial title -->
   <title>ProxyBD</title>
-  
-  <!-- Preload fonts for better performance -->
+  <!-- Preload fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- 
-    IMPORTANT NOTE FOR LARAVEL XBOARD INTEGRATION:
-    =============================================
-    
-    This index.html file is for STANDALONE usage only.
-    
-    If you are using this theme with Laravel Xboard:
-    1. Use dashboard.blade.php instead (automatically loaded by Laravel)
-    2. This index.html file will be ignored by Laravel
-    3. Configuration is managed through Laravel admin panel
-    
-    For standalone usage:
-    1. Configure settings in config.js
-    2. Ensure your API endpoints are properly set
-    3. Update the title and meta tags as needed
-  -->
-  
   <script>
-    // Config loader parameters for standalone usage
+    // config.js loader adjustable parameters
     window.PB_LOADER = {
       // config.js file name (keep default if in root)
       configFileName: 'config.js',
@@ -41,149 +21,20 @@
       // Max retries
       maxRetries: 2
     };
-    
-    // Laravel integration detection
-    // This helps identify if we're running in Laravel context
-    window.PB_RUNTIME_ENV = 'standalone'; // Laravel will override this
   </script>
-  
-  <!-- Global styles optimized for both desktop and mobile -->
+  <!-- Global styles -->
   <style>
-    /* Hide scrollbars on desktop while maintaining functionality */
-    @media (min-width: 769px) {
-      html, body, div, main, section, article, aside, nav {
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-      }
-      ::-webkit-scrollbar, ::-webkit-scrollbar-button, ::-webkit-scrollbar-track, 
-      ::-webkit-scrollbar-track-piece, ::-webkit-scrollbar-thumb, 
-      ::-webkit-scrollbar-corner, ::-webkit-resizer {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        background: transparent !important;
-      }
-      * {
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-      }
-    }
-    
-    /* Base layout styles */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow-x: hidden;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    #app {
-      width: 100%;
-      height: 100%;
-    }
-    
-    /* Preloader states */
-    html.preloader-active, 
-    body.preloader-active {
-      overflow: hidden !important;
-    }
-    
-    /* Custom styles placeholder - can be overridden via config */
-    :root {
-      --primary-color: #355cc2;
-      --background-color: #ffffff;
-      --text-color: #333333;
-    }
+     @media (min-width: 769px) {html, body, div, main, section, article, aside, nav {scrollbar-width: none !important;-ms-overflow-style: none !important;}::-webkit-scrollbar, ::-webkit-scrollbar-button, ::-webkit-scrollbar-track, ::-webkit-scrollbar-track-piece, ::-webkit-scrollbar-thumb, ::-webkit-scrollbar-corner, ::-webkit-resizer {display: none !important;width: 0 !important;height: 0 !important;background: transparent !important;}}html, body {width: 100%;height: 100%;}@media (min-width: 769px) {* {scrollbar-width: none !important;-ms-overflow-style: none !important;}} html, body {margin: 0;padding: 0;width: 100%;height: 100%;overflow-x: hidden;}#app {width: 100%;height: 100%;}html.preloader-active, body.preloader-active {overflow: hidden !important;}
   </style>
-  
   <!-- Version badge styles -->
   <style>
-    .app-version {
-      position: fixed;
-      left: 6px;
-      bottom: 4px;
-      font-size: 9px;
-      color: rgba(0, 0, 0, 0.35);
-      user-select: none;
-      pointer-events: none;
-      z-index: 5;
-      font-family: 'Inter', monospace;
-    }
-    
-    /* Dark theme version badge */
-    @media (prefers-color-scheme: dark) {
-      .app-version {
-        color: rgba(255, 255, 255, 0.35);
-      }
-    }
+    .app-version {position: fixed;left: 6px;bottom: 4px;font-size: 9px;color: rgba(0, 0, 0, 0.35);user-select: none;pointer-events: none;z-index: 5;}
   </style>
-  
-  <!-- Load main application bundle -->
   <script type="module" crossorigin src="./assets/index-sC8Xq0xY.js"></script>
 </head>
 <body>
-  <!-- Main application container -->
-  <div id="app">
-    <!-- Loading placeholder (optional) -->
-    <div id="initial-loading" style="
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-family: 'Inter', sans-serif;
-      color: #666;
-      font-size: 14px;
-      display: none;
-    ">
-      Loading ProxyBD...
-    </div>
-  </div>
-  
-  <!-- Version badge - shows current theme version -->
-  <div class="app-version">ProxyBD v1.0.0</div>
-  
-  <!-- 
-    Environment detection script
-    Helps distinguish between Laravel and standalone usage
-  -->
-  <script>
-    // Simple environment detection
-    if (window.location.pathname.includes('/api/') || 
-        document.querySelector('meta[name="csrf-token"]')) {
-      console.info('ProxyBD Theme: Laravel environment detected');
-      window.PB_RUNTIME_ENV = 'laravel';
-    } else {
-      console.info('ProxyBD Theme: Standalone environment');
-      window.PB_RUNTIME_ENV = 'standalone';
-    }
-    
-    // Show loading indicator after a brief delay if app hasn't loaded
-    setTimeout(() => {
-      const app = document.getElementById('app');
-      const loading = document.getElementById('initial-loading');
-      if (app && app.children.length <= 1 && loading) {
-        loading.style.display = 'block';
-      }
-    }, 1000);
-    
-    // Hide loading indicator when app loads
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const loading = document.getElementById('initial-loading');
-        if (loading) {
-          loading.style.display = 'none';
-        }
-      }, 2000);
-    });
-  </script>
-  
-  <!-- Custom HTML injection point for standalone usage -->
-  <!-- Add your custom scripts, analytics, or widgets here -->
-  <!-- 
-    For Laravel integration, use the Custom Footer HTML option 
-    in the theme configuration panel instead
-  -->
+  <div id="app"></div>
+  <!-- Hide version number. If you don't want to display the version number, please comment out the div tag below -->
+  <div class="app-version">v1.0.0</div>
 </body>
 </html> 
