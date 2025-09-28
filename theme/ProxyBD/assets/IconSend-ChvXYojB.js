@@ -1,0 +1,6 @@
+import{Z as m,_ as o,z as s,o as n,b as a,r as c}from"./appInit-CGHXFw0-.js";import{I as p}from"./IconSend-BZHPAH8O.js";/**
+ * @license @tabler/icons-vue v3.35.0 - MIT
+ *
+ * This source code is licensed under the MIT license.
+ * See the LICENSE file in the root directory of this source tree.
+ */var _=m("outline","code","Code",[["path",{d:"M7 8l-4 4l4 4",key:"svg-0"}],["path",{d:"M17 8l4 4l-4 4",key:"svg-1"}],["path",{d:"M14 4l-4 16",key:"svg-2"}]]);const f={name:"IconCode",components:{TablerIconCode:_},props:{size:{type:[Number,String],default:24},strokeWidth:{type:[Number,String],default:2},customClass:{type:String,default:""}}};function C(r,d,e,l,i,u){const t=c("TablerIconCode");return n(),s(t,{size:e.size,"stroke-width":e.strokeWidth,class:a(e.customClass)},null,8,["size","stroke-width","class"])}const b=o(f,[["render",C]]),I={name:"IconSend",components:{TablerIconSend:p},props:{size:{type:[Number,String],default:24},strokeWidth:{type:[Number,String],default:2},customClass:{type:String,default:""}}};function h(r,d,e,l,i,u){const t=c("TablerIconSend");return n(),s(t,{size:e.size,"stroke-width":e.strokeWidth,class:a(e.customClass)},null,8,["size","stroke-width","class"])}const z=o(I,[["render",h]]);export{z as I,b as a};

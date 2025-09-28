@@ -1,0 +1,183 @@
+{
+  "name": "ProxyBD",
+  "description": "ProxyBD Theme - Optimized for BDIX Bypass Service",
+  "version": "1.0.0",
+  "author": "ProxyBD Team",
+  "images": [],
+  "configs": [
+    {
+      "label": "Site Name",
+      "placeholder": "Enter your site name",
+      "field_name": "site_name",
+      "field_type": "input",
+      "default_value": "ProxyBD"
+    },
+    {
+      "label": "Site Description",
+      "placeholder": "Enter site description",
+      "field_name": "site_description",
+      "field_type": "input",
+      "default_value": "ProxyBD BDIX Bypass Service"
+    },
+    {
+      "label": "Primary Theme Color",
+      "placeholder": "Enter primary color (hex code)",
+      "field_name": "primary_color",
+      "field_type": "input",
+      "default_value": "#355cc2"
+    },
+    {
+      "label": "Default Theme Mode",
+      "placeholder": "Select default theme mode",
+      "field_name": "default_theme",
+      "field_type": "select",
+      "select_options": {
+        "light": "Light Mode",
+        "dark": "Dark Mode"
+      },
+      "default_value": "light"
+    },
+    {
+      "label": "Default Language",
+      "placeholder": "Select default language",
+      "field_name": "default_language",
+      "field_type": "select",
+      "select_options": {
+        "en-US": "English (US)",
+        "bn-BD": "Bengali (BD)"
+      },
+      "default_value": "en-US"
+    },
+    {
+      "label": "Enable Landing Page",
+      "placeholder": "Show landing page for non-authenticated users",
+      "field_name": "enable_landing_page",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Landing Page Text (English)",
+      "placeholder": "Enter landing page text in English",
+      "field_name": "landing_text_en",
+      "field_type": "input",
+      "default_value": "Use ProxyBD BDIX Bypass Service"
+    },
+    {
+      "label": "Landing Page Text (Bengali)",
+      "placeholder": "Enter landing page text in Bengali",
+      "field_name": "landing_text_bn",
+      "field_type": "input",
+      "default_value": "ProxyBD BDIX বাইপাস সেবা ব্যবহার করুন"
+    },
+    {
+      "label": "API Configuration Mode",
+      "placeholder": "Select API configuration mode",
+      "field_name": "api_mode",
+      "field_type": "select",
+      "select_options": {
+        "auto": "Auto (derive from current domain)",
+        "static": "Static URL"
+      },
+      "default_value": "auto"
+    },
+    {
+      "label": "Static API URL",
+      "placeholder": "Enter static API URL (only when static mode is selected)",
+      "field_name": "static_api_url",
+      "field_type": "input",
+      "default_value": ""
+    },
+    {
+      "label": "Show User Email in Dashboard",
+      "placeholder": "Display user email in dashboard welcome card",
+      "field_name": "show_user_email",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "false"
+    },
+    {
+      "label": "Enable Reset Traffic Feature",
+      "placeholder": "Allow users to reset their traffic",
+      "field_name": "enable_reset_traffic",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Reset Traffic Display Mode",
+      "placeholder": "When to show reset traffic button",
+      "field_name": "reset_traffic_mode",
+      "field_type": "select",
+      "select_options": {
+        "always": "Always",
+        "low": "When traffic is low",
+        "depleted": "When traffic is depleted"
+      },
+      "default_value": "low"
+    },
+    {
+      "label": "Low Traffic Threshold (%)",
+      "placeholder": "Threshold percentage for low traffic warning",
+      "field_name": "low_traffic_threshold",
+      "field_type": "input",
+      "default_value": "10"
+    },
+    {
+      "label": "Enable Renew Plan Feature",
+      "placeholder": "Allow users to renew their subscription plans",
+      "field_name": "enable_renew_plan",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Auto Agreement to Terms",
+      "placeholder": "Automatically check terms agreement on auth pages",
+      "field_name": "auto_agree_terms",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Payment Opens in New Tab",
+      "placeholder": "Open payment links in new browser tab",
+      "field_name": "payment_new_tab",
+      "field_type": "select",
+      "select_options": {
+        "true": "New Tab",
+        "false": "Current Tab"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Custom Footer HTML",
+      "placeholder": "Add custom HTML/JS code to footer (analytics, chat widgets, etc.)",
+      "field_name": "custom_html",
+      "field_type": "textarea",
+      "default_value": ""
+    },
+    {
+      "label": "Custom CSS",
+      "placeholder": "Add custom CSS styles",
+      "field_name": "custom_css",
+      "field_type": "textarea",
+      "default_value": ""
+    }
+  ]
+}
