@@ -37,7 +37,7 @@ class Plugin extends Model
         'coin_payments',  // CoinPayments
         'mgate',          // MGate
         'telegram',       // Telegram
-        'uddoktapay',     // UddoktaPay
+        'uddokta_pay',    // UddoktaPay
     ];
 
     protected $guarded = [
