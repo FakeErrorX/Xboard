@@ -1,0 +1,375 @@
+{
+  "name": "ProxyBD",
+  "description": "ProxyBD Modern Theme with Full Configuration Support",
+  "version": "1.0.0",
+  "images": "",
+  "configs": [
+    {
+      "label": "Site Name",
+      "placeholder": "Enter your site name",
+      "field_name": "site_name",
+      "field_type": "input",
+      "default_value": "ProxyBD"
+    },
+    {
+      "label": "Site Description",
+      "placeholder": "Enter site description",
+      "field_name": "site_description",
+      "field_type": "input",
+      "default_value": "BDIX Bypass Service"
+    },
+    {
+      "label": "Panel Type",
+      "placeholder": "Select your panel type",
+      "field_name": "panel_type",
+      "field_type": "select",
+      "select_options": {
+        "Xboard": "Xboard",
+        "V2board": "V2board",
+        "Xiao-V2board": "Xiao-V2board"
+      },
+      "default_value": "Xboard"
+    },
+    {
+      "label": "Primary Color",
+      "placeholder": "Enter hex color code (e.g., #355cc2)",
+      "field_name": "primary_color",
+      "field_type": "input",
+      "default_value": "#355cc2"
+    },
+    {
+      "label": "Default Theme",
+      "placeholder": "Select default theme",
+      "field_name": "default_theme",
+      "field_type": "select",
+      "select_options": {
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "default_value": "light"
+    },
+    {
+      "label": "Default Language",
+      "placeholder": "Select default language",
+      "field_name": "default_language",
+      "field_type": "select",
+      "select_options": {
+        "en-US": "English (US)"
+      },
+      "default_value": "en-US"
+    },
+    {
+      "label": "Enable Landing Page",
+      "placeholder": "Show landing page for visitors",
+      "field_name": "enable_landing_page",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Landing Text",
+      "placeholder": "Enter landing page slogan",
+      "field_name": "landing_text",
+      "field_type": "input",
+      "default_value": "Use ProxyBD BDIX Bypass Service"
+    },
+    {
+      "label": "Show Site Logo",
+      "placeholder": "Display logo in title",
+      "field_name": "show_logo",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Auth Layout Type",
+      "placeholder": "Select authentication page layout",
+      "field_name": "auth_layout_type",
+      "field_type": "select",
+      "select_options": {
+        "center": "Centered Card",
+        "split": "Split Columns"
+      },
+      "default_value": "center"
+    },
+    {
+      "label": "Auto Agree Terms",
+      "placeholder": "Auto-check agree to terms checkbox",
+      "field_name": "auto_agree_terms",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Show Hot Sale Badge",
+      "placeholder": "Show hot sale badge in shop navigation",
+      "field_name": "show_hot_sale_badge",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "false"
+    },
+    {
+      "label": "Show Plan Feature Cards",
+      "placeholder": "Display plan feature cards in shop",
+      "field_name": "show_plan_feature_cards",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Auto Select Max Period",
+      "placeholder": "Auto-select the largest period tab",
+      "field_name": "auto_select_max_period",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "false"
+    },
+    {
+      "label": "Hide Period Tabs",
+      "placeholder": "Hide period selection tabs",
+      "field_name": "hide_period_tabs",
+      "field_type": "select",
+      "select_options": {
+        "true": "Hide",
+        "false": "Show"
+      },
+      "default_value": "false"
+    },
+    {
+      "label": "Low Stock Threshold",
+      "placeholder": "Low stock threshold (1-20)",
+      "field_name": "low_stock_threshold",
+      "field_type": "input",
+      "default_value": "5"
+    },
+    {
+      "label": "Enable Discount Calculation",
+      "placeholder": "Show period discount calculation",
+      "field_name": "enable_discount_calculation",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Show User Email in Dashboard",
+      "placeholder": "Display user email in welcome card",
+      "field_name": "show_user_email",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "false"
+    },
+    {
+      "label": "Enable Reset Traffic",
+      "placeholder": "Enable reset traffic feature",
+      "field_name": "enable_reset_traffic",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Reset Traffic Display Mode",
+      "placeholder": "When to show reset traffic button",
+      "field_name": "reset_traffic_display_mode",
+      "field_type": "select",
+      "select_options": {
+        "always": "Always Show",
+        "low": "When Traffic is Low",
+        "depleted": "When Traffic is Depleted"
+      },
+      "default_value": "low"
+    },
+    {
+      "label": "Low Traffic Threshold",
+      "placeholder": "Low traffic threshold percentage (1-100)",
+      "field_name": "low_traffic_threshold",
+      "field_type": "input",
+      "default_value": "10"
+    },
+    {
+      "label": "Enable Renew Plan",
+      "placeholder": "Enable renew plan feature",
+      "field_name": "enable_renew_plan",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Renew Plan Display Mode",
+      "placeholder": "When to show renew button",
+      "field_name": "renew_plan_display_mode",
+      "field_type": "select",
+      "select_options": {
+        "always": "Always Show",
+        "expiring": "When Expiring",
+        "expired": "When Expired"
+      },
+      "default_value": "always"
+    },
+    {
+      "label": "Expiring Threshold Days",
+      "placeholder": "Expiring threshold in days (1-30)",
+      "field_name": "expiring_threshold",
+      "field_type": "input",
+      "default_value": "7"
+    },
+    {
+      "label": "Show Download Card",
+      "placeholder": "Show entire download card",
+      "field_name": "show_download_card",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Show Node Rate",
+      "placeholder": "Display node rate information",
+      "field_name": "show_node_rate",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Show Node Details",
+      "placeholder": "Display node details (host and port)",
+      "field_name": "show_node_details",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "false"
+    },
+    {
+      "label": "Allow View Node Info",
+      "placeholder": "Allow viewing detailed node information",
+      "field_name": "allow_view_node_info",
+      "field_type": "select",
+      "select_options": {
+        "true": "Allow",
+        "false": "Deny"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Open Payment in New Tab",
+      "placeholder": "Open payment links in new tab",
+      "field_name": "open_payment_new_tab",
+      "field_type": "select",
+      "select_options": {
+        "true": "New Tab",
+        "false": "Current Tab"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "QR Code Size",
+      "placeholder": "Payment QR code size in pixels",
+      "field_name": "qrcode_size",
+      "field_type": "input",
+      "default_value": "200"
+    },
+    {
+      "label": "Auto Check Payment",
+      "placeholder": "Automatically check payment status",
+      "field_name": "auto_check_payment",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Auto Check Interval (ms)",
+      "placeholder": "Payment status check interval in milliseconds",
+      "field_name": "auto_check_interval",
+      "field_type": "input",
+      "default_value": "5000"
+    },
+    {
+      "label": "Enable Traffic Log",
+      "placeholder": "Enable traffic log page",
+      "field_name": "enable_traffic_log",
+      "field_type": "select",
+      "select_options": {
+        "true": "Enabled",
+        "false": "Disabled"
+      },
+      "default_value": "true"
+    },
+    {
+      "label": "Traffic Log Days",
+      "placeholder": "Number of days to show traffic records",
+      "field_name": "traffic_log_days",
+      "field_type": "input",
+      "default_value": "30"
+    },
+    {
+      "label": "Wallet Preset Amounts",
+      "placeholder": "Comma-separated preset deposit amounts",
+      "field_name": "wallet_preset_amounts",
+      "field_type": "input",
+      "default_value": "6,30,68,128,256,328,648,1280"
+    },
+    {
+      "label": "Minimum Deposit Amount",
+      "placeholder": "Minimum deposit amount",
+      "field_name": "minimum_deposit_amount",
+      "field_type": "input",
+      "default_value": "1"
+    },
+    {
+      "label": "Show Commission Badge",
+      "placeholder": "Show commission badge on invite button",
+      "field_name": "show_commission_badge",
+      "field_type": "select",
+      "select_options": {
+        "true": "Show",
+        "false": "Hide"
+      },
+      "default_value": "false"
+    },
+    {
+      "label": "Custom Footer HTML",
+      "placeholder": "Custom HTML for footer (customer service, analytics, etc.)",
+      "field_name": "custom_html",
+      "field_type": "textarea"
+    }
+  ]
+}
