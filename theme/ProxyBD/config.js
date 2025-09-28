@@ -27,7 +27,9 @@ window.PB_CONFIG = {
       useSameProtocol: true,
       appendApiPath: true,
       apiPath: '/api/v1'
-    }
+    },
+    // Fallback static URL - will be overridden by Laravel
+    staticBaseUrl: [window.location.origin + '/api/v1']
   },
   
   // Disable middleware since we're using Laravel directly
@@ -170,4 +172,9 @@ if (typeof window.PB_CONFIG_OVERRIDE !== 'undefined') {
   window.PB_CONFIG = deepMerge(window.PB_CONFIG, window.PB_CONFIG_OVERRIDE);
   
   console.log('✓ ProxyBD: Laravel theme configuration applied');
+  console.log('API Config:', window.PB_CONFIG.API_CONFIG);
+  console.log('Site Config:', window.PB_CONFIG.SITE_CONFIG);
+} else {
+  console.warn('⚠ ProxyBD: No Laravel override configuration found');
+  console.log('Current API Config:', window.PB_CONFIG.API_CONFIG);
 }

@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" href="/theme/{{$theme}}/images/logo.png">
   <!-- Set title with theme config -->
   <title>{{ $theme_config['site_name'] ?? $title }}</title>
@@ -23,6 +26,9 @@
       // Max retries
       maxRetries: 2
     };
+
+    // Cache busting for config updates - use Laravel timestamp
+    window.CONFIG_TIMESTAMP = '{{ time() }}';
   </script>
   
   <!-- Global styles -->
@@ -35,28 +41,48 @@
     .app-version {position: fixed;left: 6px;bottom: 4px;font-size: 9px;color: rgba(0, 0, 0, 0.35);user-select: none;pointer-events: none;z-index: 5;}
   </style>
   
-  <script type="module" crossorigin src="/theme/{{$theme}}/index.js"></script>
-  <link rel="stylesheet" crossorigin href="/theme/{{$theme}}/index.css">
+  <script type="module" crossorigin src="/theme/{{$theme}}/index.js?v={{ time() }}"></script>
+  <link rel="stylesheet" crossorigin href="/theme/{{$theme}}/index.css?v={{ time() }}">
 </head>
 <body>
   <div id="app"></div>
   
   <!-- Dynamic configuration script that integrates Laravel theme config with ProxyBD config -->
   <script>
+    // Laravel integration data that can be accessed by ProxyBD
+    window.LARAVEL_DATA = {
+      title: '{{ $title }}',
+      theme: '{{ $theme }}',
+      version: '{{ $version }}',
+      description: '{{ $description }}',
+      logo: '{{ $logo }}',
+      assets_path: '/theme/{{ $theme }}',
+      routerBase: "/",
+      apiBase: '{{ url('/api/v1') }}',
+      baseUrl: '{{ url('/') }}'
+    };
+
     // Override ProxyBD config with Laravel theme configuration
     window.PB_CONFIG_OVERRIDE = {
       // Panel type configuration
       PANEL_TYPE: '{{ $theme_config['panel_type'] ?? 'Xboard' }}',
       
-      // API configuration - keeping static for now but can be made configurable
+      // API configuration - Force auto mode with current domain
       API_CONFIG: {
         urlMode: 'auto',
         autoConfig: {
           useSameProtocol: true,
           appendApiPath: true,
           apiPath: '/api/v1'
-        }
+        },
+        // Override staticBaseUrl to prevent external calls
+        staticBaseUrl: ['{{ url('/api/v1') }}']
       },
+      
+      // Disable middleware since we're using Laravel directly
+      API_MIDDLEWARE_ENABLED: false,
+      API_MIDDLEWARE_URL: '',
+      API_MIDDLEWARE_PATH: '',
       
       // Site basic configuration
       SITE_CONFIG: {
@@ -308,7 +334,79 @@
       assets_path: '/theme/{{ $theme }}',
       routerBase: "/"
     };
-  </script>
+
+    // Force API base URL to prevent external calls
+    window.API_BASE_URL = '{{ url('/api/v1') }}';
+    
+    // Override any external API calls - this will run before ProxyBD initializes
+    (function() {
+      const originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        // Intercept any API calls and redirect to local Laravel
+        if (typeof url === 'string') {
+          if (url.includes('proxybd.com') || url.includes('/user/') || url.includes('/api/')) {
+            // Replace with local Laravel API
+            if (url.startsWith('http')) {
+              // External URL - extract the path part
+              const urlObj = new URL(url);
+              url = '{{ url('/') }}' + urlObj.pathname;
+            } else if (!url.startsWith('{{ url('/') }}')) {
+              // Relative URL - make it absolute to local server
+              if (url.startsWith('/')) {
+                url = '{{ url('/') }}' + url;
+              } else {
+                url = '{{ url('/api/v1') }}/' + url;
+              }
+            }
+          }
+        }
+        console.log('API Request intercepted:', url);
+        return originalFetch.call(this, url, options);
+      };
+    })();
+    
+    // Override XMLHttpRequest for axios/other HTTP libraries
+    (function() {
+      const originalOpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+        if (typeof url === 'string') {
+          if (url.includes('proxybd.com') || url.includes('/user/') || url.includes('/api/')) {
+            if (url.startsWith('http')) {
+              const urlObj = new URL(url);
+              url = '{{ url('/') }}' + urlObj.pathname;
+            } else if (!url.startsWith('{{ url('/') }}')) {
+              if (url.startsWith('/')) {
+                url = '{{ url('/') }}' + url;
+              } else {
+                url = '{{ url('/api/v1') }}/' + url;
+              }
+            }
+          }
+        }
+        console.log('XHR Request intercepted:', url);
+        return originalOpen.call(this, method, url, async, user, password);
+      };
+    })();
+    
+    // Override any external API calls
+    if (typeof window.axios !== 'undefined') {
+      window.axios.defaults.baseURL = '{{ url('/api/v1') }}';
+    }
+    
+    // Debug information
+    console.log('Laravel API Base:', window.LARAVEL_DATA.apiBase);
+    console.log('Forced API Base:', window.API_BASE_URL);
+    console.log('Config Timestamp:', window.CONFIG_TIMESTAMP);
+    console.log('Theme Config Keys:', Object.keys(window.PB_CONFIG_OVERRIDE));
+    
+    // Global debug function for admin panel testing
+    window.debugThemeConfig = function() {
+      console.log('=== ProxyBD Theme Debug ===');
+      console.log('Laravel Data:', window.LARAVEL_DATA);
+      console.log('Config Override:', window.PB_CONFIG_OVERRIDE);
+      console.log('Final Config:', window.PB_CONFIG);
+      console.log('Current Time:', new Date().toLocaleString());
+    };
 
   <!-- Version number display -->
   <div class="app-version">{{ $version }}</div>
