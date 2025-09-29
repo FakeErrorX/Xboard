@@ -248,7 +248,7 @@ window.PB_CONFIG = {
     renewPlanDisplayMode: 'always',
     
     // Expiring threshold in days (1-30)
-    expiringThreshold: 7,
+    expiringThreshold: 3,
 
     // ===============================
 
@@ -319,10 +319,10 @@ window.PB_CONFIG = {
   // User profile page configuration
   PROFILE_CONFIG: {
     // Show gift card redeem section (true=show, false=hide)
-    showGiftCardRedeem: false, // Only Xiao-V2board supports gift card redeem
+    showGiftCardRedeem: true, // Only Xiao-V2board supports gift card redeem
     
     // Show recent login devices section (true=show, false=hide)
-    showRecentDevices: true
+    showRecentDevices: false
   },
 
   // =======================================================
@@ -369,7 +369,7 @@ window.PB_CONFIG = {
   // Payment configuration
   PAYMENT_CONFIG: {
     // Open payment link in new tab (true=new tab, false=current)
-    openPaymentInNewTab: true, // enabled by default
+    openPaymentInNewTab: false, // enabled by default
     
     // Payment QR code size (px)
     qrcodeSize: 200,

@@ -79,7 +79,7 @@ class UddoktaPayController extends Controller
                     'invoice_id' => $invoiceId
                 ]);
                 
-                return redirect('/#/order/' . $tradeNo . '?status=success');
+                return redirect('/#/payment/' . $tradeNo . '?status=success');
             } else {
                 // Payment not completed yet
                 Log::info('UddoktaPay return payment pending', [
@@ -88,7 +88,7 @@ class UddoktaPayController extends Controller
                     'status' => $paymentResult['status']
                 ]);
                 
-                return redirect('/#/order/' . $tradeNo . '?status=pending');
+                return redirect('/#/payment/' . $tradeNo . '?status=pending');
             }
 
         } catch (\Exception $e) {
