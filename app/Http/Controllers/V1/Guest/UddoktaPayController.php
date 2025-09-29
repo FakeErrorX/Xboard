@@ -22,7 +22,7 @@ class UddoktaPayController extends Controller
             $invoiceId = $request->get('invoice_id');
             
             if (!$invoiceId) {
-                return redirect('/#/order?error=missing_invoice_id');
+                return redirect('/#/payment?error=missing_invoice_id');
             }
 
             Log::info('UddoktaPay return URL accessed', [
@@ -41,7 +41,7 @@ class UddoktaPayController extends Controller
                     'invoice_id' => $invoiceId,
                     'error' => $paymentResult['message'] ?? 'Unknown error'
                 ]);
-                return redirect('/#/order?error=verification_failed');
+                return redirect('/#/payment?error=verification_failed');
             }
 
             // Extract trade_no from verification result
@@ -52,7 +52,7 @@ class UddoktaPayController extends Controller
                     'invoice_id' => $invoiceId,
                     'verification_result' => $paymentResult
                 ]);
-                return redirect('/#/order?error=missing_trade_no');
+                return redirect('/#/payment?error=missing_trade_no');
             }
 
             // Find the order
@@ -63,7 +63,7 @@ class UddoktaPayController extends Controller
                     'trade_no' => $tradeNo,
                     'invoice_id' => $invoiceId
                 ]);
-                return redirect('/#/order?error=order_not_found');
+                return redirect('/#/payment?error=order_not_found');
             }
 
             // Check if payment is completed
@@ -79,7 +79,7 @@ class UddoktaPayController extends Controller
                     'invoice_id' => $invoiceId
                 ]);
                 
-                return redirect('/#/payment/' . $tradeNo . '?status=success');
+                return redirect('/#/payment?trade_no=' . $tradeNo . '&status=success');
             } else {
                 // Payment not completed yet
                 Log::info('UddoktaPay return payment pending', [
@@ -88,7 +88,7 @@ class UddoktaPayController extends Controller
                     'status' => $paymentResult['status']
                 ]);
                 
-                return redirect('/#/payment/' . $tradeNo . '?status=pending');
+                return redirect('/#/payment?trade_no=' . $tradeNo . '&status=pending');
             }
 
         } catch (\Exception $e) {
@@ -96,7 +96,7 @@ class UddoktaPayController extends Controller
                 'error' => $e->getMessage(),
                 'invoice_id' => $request->get('invoice_id', 'unknown')
             ]);
-            return redirect('/#/order?error=processing_failed');
+            return redirect('/#/payment?error=processing_failed');
         }
     }
 
