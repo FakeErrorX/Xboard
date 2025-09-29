@@ -70,51 +70,6 @@ Route::get('/', function (Request $request) {
     }
 });
 
-// Dynamic config.js route for ProxyBD theme
-Route::get('/theme/{theme}/config.js', function ($theme) {
-    // Only allow specific themes that support dynamic config
-    if (!in_array($theme, ['ProxyBD'])) {
-        abort(404, 'Theme does not support dynamic configuration');
-    }
-
-    $themeService = new ThemeService();
-    if (!$themeService->exists($theme)) {
-        abort(404, 'Theme not found');
-    }
-
-    try {
-        $themeConfig = $themeService->getConfig($theme) ?? [];
-        
-        // Generate dynamic config.js based on Laravel settings
-        $configJs = view('theme::' . $theme . '.config-js', [
-            'theme_config' => $themeConfig,
-            'theme' => $theme,
-            'title' => admin_setting('app_name', 'ProxyBD'),
-            'description' => admin_setting('app_description', 'BDIX Bypass Service')
-        ])->render();
-
-        return response($configJs, 200, [
-            'Content-Type' => 'application/javascript; charset=utf-8',
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => '0',
-            'X-Content-Type-Options' => 'nosniff'
-        ]);
-        
-    } catch (Exception $e) {
-        Log::error('Failed to generate dynamic config.js', [
-            'theme' => $theme,
-            'error' => $e->getMessage()
-        ]);
-        
-        // Return a basic fallback config
-        $fallbackConfig = "window.PB_CONFIG = { PANEL_TYPE: 'Xboard', API_CONFIG: { urlMode: 'auto' } };";
-        return response($fallbackConfig, 200, [
-            'Content-Type' => 'application/javascript; charset=utf-8'
-        ]);
-    }
-})->where('theme', '[a-zA-Z0-9_-]+');
-
 //TODO:: Compatibility
 Route::get('/' . admin_setting('secure_path', admin_setting('frontend_admin_path', hash('crc32b', config('app.key')))), function () {
     return view('admin', [

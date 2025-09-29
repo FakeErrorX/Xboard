@@ -312,11 +312,6 @@ class ThemeService
             $newConfig = array_merge($currentConfig, $validConfig);
 
             admin_setting([self::SETTING_PREFIX . $theme => $newConfig]);
-            
-            // Clear any cached config for dynamic themes
-            $this->clearThemeConfigCache($theme);
-            
-            Log::info('Theme config updated successfully', ['theme' => $theme]);
             return true;
 
         } catch (Exception $e) {
@@ -351,18 +346,10 @@ class ThemeService
                 Log::info('Cleaned up public theme files', ['theme' => $theme, 'path' => $publicThemePath]);
             }
 
-            // Clear all theme-related cache keys
-            $cacheKeys = [
-                "theme_{$theme}_assets",
-                "theme_{$theme}_config",
-                "dynamic_config_{$theme}"
-            ];
-
-            foreach ($cacheKeys as $cacheKey) {
-                if (cache()->has($cacheKey)) {
-                    cache()->forget($cacheKey);
-                    Log::info('Cleaned up theme cache', ['theme' => $theme, 'cache_key' => $cacheKey]);
-                }
+            $cacheKey = "theme_{$theme}_assets";
+            if (cache()->has($cacheKey)) {
+                cache()->forget($cacheKey);
+                Log::info('Cleaned up theme cache', ['theme' => $theme, 'cache_key' => $cacheKey]);
             }
 
         } catch (Exception $e) {
@@ -405,44 +392,6 @@ class ThemeService
                 'error' => $e->getMessage()
             ]);
             return false;
-        }
-    }
-
-    /**
-     * Clear theme configuration cache
-     */
-    private function clearThemeConfigCache(string $theme): void
-    {
-        try {
-            // Clear any view cache that might be storing config
-            if (function_exists('artisan')) {
-                \Artisan::call('view:clear');
-            }
-
-            // Clear specific cache keys for the theme
-            $cacheKeys = [
-                "theme_{$theme}_config",
-                "theme_{$theme}_assets",
-                "dynamic_config_{$theme}"
-            ];
-
-            foreach ($cacheKeys as $key) {
-                if (cache()->has($key)) {
-                    cache()->forget($key);
-                    Log::debug('Cleared theme cache', ['theme' => $theme, 'cache_key' => $key]);
-                }
-            }
-
-            // Force refresh theme files in public directory if this is the current theme
-            if ($theme === admin_setting('current_theme')) {
-                $this->refreshCurrentTheme();
-            }
-
-        } catch (Exception $e) {
-            Log::warning('Failed to clear theme config cache', [
-                'theme' => $theme,
-                'error' => $e->getMessage()
-            ]);
         }
     }
 
