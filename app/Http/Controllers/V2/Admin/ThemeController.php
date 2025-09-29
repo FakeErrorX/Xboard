@@ -105,7 +105,7 @@ class ThemeController extends Controller
     {
         $data = [
             'themes' => $this->themeService->getList(),
-            'active' => admin_setting('frontend_theme', 'Xboard')
+            'active' => admin_setting('frontend_theme', 'ProxyBD')
         ];
         return $this->success($data);
     }

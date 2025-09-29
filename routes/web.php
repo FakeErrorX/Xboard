@@ -26,14 +26,14 @@ Route::get('/', function (Request $request) {
         }
     }
 
-    $theme = admin_setting('frontend_theme', 'Xboard');
+    $theme = admin_setting('frontend_theme', 'ProxyBD');
     $themeService = new ThemeService();
 
     try {
         if (!$themeService->exists($theme)) {
-            if ($theme !== 'Xboard') {
+            if ($theme !== 'ProxyBD') {
                 Log::warning('Theme not found, switching to default theme', ['theme' => $theme]);
-                $theme = 'Xboard';
+                $theme = 'ProxyBD';
                 admin_setting(['frontend_theme' => $theme]);
             }
             $themeService->switch($theme);
