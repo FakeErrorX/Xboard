@@ -271,12 +271,12 @@ window.PB_CONFIG = {
 
     // Client download links (you can change to docs links to open in new tab)
     clientLinks: {
-      ios: 'https://apps.apple.com/app/xxx',
-      android: 'https://play.google.com/store/apps/xxx',
-      macos: 'https://github.com/xxx/releases/latest',
-      windows: 'https://github.com/xxx/releases/latest',
-      linux: 'https://github.com/xxx/releases/latest',
-      openwrt: 'https://github.com/xxx/releases/latest'
+      ios: 'https://apps.apple.com/us/app/hiddify-proxy-vpn/id6596777532',
+      android: 'https://github.com/chen08209/FlClash/releases/latest',
+      macos: 'https://github.com/chen08209/FlClash/releases/latest',
+      windows: 'https://github.com/chen08209/FlClash/releases/latest',
+      linux: 'https://github.com/chen08209/FlClash/releases/latest',
+      openwrt: 'https://github.com/nikkinikki-org/OpenWrt-nikki/releases/latest'
     },
     
     // Subscription import clients (note: some panels do not support SingBox import)
@@ -330,7 +330,7 @@ window.PB_CONFIG = {
   // Captcha configuration
   CAPTCHA_CONFIG: {
     // Verification type: 'google' or 'cloudflare'
-    captchaType: 'google',
+    captchaType: 'cloudflare',
     
     // Google reCAPTCHA configuration (v2 by default)
     google: {

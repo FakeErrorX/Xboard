@@ -35,17 +35,20 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                     ['value' => 'sandbox', 'label' => 'Sandbox (Testing)'],
                     ['value' => 'live', 'label' => 'Live (Production)']
                 ],
-                'description' => 'Choose between sandbox for testing or live for production payments'
+                'description' => 'Choose between sandbox for testing or live for production payments',
+                'default' => 'sandbox'
             ],
             'live_api_key' => [
                 'label' => 'Live API Key',
                 'type' => 'string',
-                'description' => 'Your UddoktaPay Live API Key (required for live mode only)'
+                'description' => 'Your UddoktaPay Live API Key (required for live mode only)',
+                'default' => ''
             ],
             'live_base_url' => [
                 'label' => 'Live Base URL',
                 'type' => 'string',
-                'description' => 'Your UddoktaPay Live installation URL (required for live mode only)'
+                'description' => 'Your UddoktaPay Live installation URL (required for live mode only)',
+                'default' => ''
             ],
             'currency' => [
                 'label' => 'Currency',
@@ -54,7 +57,8 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                     ['value' => 'BDT', 'label' => 'BDT - Bangladeshi Taka'],
                     ['value' => 'USD', 'label' => 'USD - US Dollar']
                 ],
-                'description' => 'Payment currency (BDT for Bangladeshi methods, USD for global)'
+                'description' => 'Payment currency (BDT for Bangladeshi methods, USD for global)',
+                'default' => 'BDT'
             ],
             'payment_type' => [
                 'label' => 'Payment Type',
@@ -63,7 +67,8 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                     ['value' => 'bangladeshi', 'label' => 'Bangladeshi Methods (bKash, Rocket, Nagad, etc.)'],
                     ['value' => 'global', 'label' => 'Global Methods (Cards, PayPal, etc.)']
                 ],
-                'description' => 'Choose payment method type based on your target audience'
+                'description' => 'Choose payment method type based on your target audience',
+                'default' => 'bangladeshi'
             ]
         ];
     }
@@ -292,8 +297,28 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                 Log::info('UddoktaPay: Verification response', [
                     'invoice_id' => $invoiceId,
                     'status' => $data['status'] ?? 'unknown',
-                    'amount' => $data['amount'] ?? 'unknown'
+                    'amount' => $data['amount'] ?? 'unknown',
+                    'full_response' => $data
                 ]);
+                
+                // Check if the response indicates "No Data Found" or similar error
+                if (isset($data['status']) && $data['status'] === 'ERROR') {
+                    $message = $data['message'] ?? 'Unknown error';
+                    Log::warning('UddoktaPay: API returned error status', [
+                        'invoice_id' => $invoiceId,
+                        'error_message' => $message
+                    ]);
+                    
+                    // If it's "No Data Found", it might be a timing issue where the payment
+                    // hasn't been recorded in their system yet, but it could still be valid
+                    if (stripos($message, 'no data found') !== false) {
+                        Log::info('UddoktaPay: No data found - payment might be too recent', [
+                            'invoice_id' => $invoiceId
+                        ]);
+                    }
+                    
+                    return false;
+                }
                 
                 if (isset($data['status']) && $data['status'] === 'COMPLETED') {
                     return [
@@ -316,7 +341,8 @@ class Plugin extends AbstractPlugin implements PaymentInterface
                 Log::error('UddoktaPay: Verification failed', [
                     'invoice_id' => $invoiceId,
                     'status_code' => $response->status(),
-                    'error' => $errorData['message'] ?? 'Unknown error'
+                    'error' => $errorData['message'] ?? 'Unknown error',
+                    'response' => $errorData
                 ]);
                 return false;
             }
@@ -324,7 +350,8 @@ class Plugin extends AbstractPlugin implements PaymentInterface
         } catch (\Exception $e) {
             Log::error('UddoktaPay: Verification error', [
                 'invoice_id' => $invoiceId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return false;
         }
